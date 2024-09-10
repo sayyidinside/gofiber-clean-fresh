@@ -45,16 +45,8 @@ func Connect() (*gorm.DB, error) {
 	}
 
 	// Migrate and seed the database
-	migrate(db)
-	seed(db)
+	Migrate(db)
+	Seeding(db)
 
 	return db, nil
-}
-
-func migrate(db *gorm.DB) {
-	log.Println("running migration")
-}
-
-func seed(db *gorm.DB) {
-	log.Println("running seeding")
 }
