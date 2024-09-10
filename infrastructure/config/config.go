@@ -1,5 +1,12 @@
 package config
 
+import (
+	"log"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/viper"
+)
+
 type Config struct {
 	AppName          string `mapstructure:"APP_NAME"`
 	Env              string `mapstructure:"ENV"`
@@ -13,10 +20,56 @@ type Config struct {
 	RateLimitMax     int    `mapstructure:"RATE_LIMIT_MAX"`
 	RateLimitExp     int    `mapstructure:"RATE_LIMIT_EXPIRATION"`
 	CacheExp         int    `mapstructure:"CACHE_EXPIRATION"`
+	SmtpEmail        string `mapstructure:"SMTP_EMAIL"`
+	SmtpPassword     string `mapstructure:"SMTP_PASSWORD"`
+	SmtpHost         string `mapstructure:"SMTP_HOST"`
+	SmtPort          string `mapstructure:"SMTP_PORT"`
+	ProdDbUsername   string `mapstructure:"PROD_DB_USERNAME"`
+	ProdDbPassword   string `mapstructure:"PROD_DB_PASSWORD"`
+	ProdDbName       string `mapstructure:"PROD_DB_NAME"`
+	ProdDbHost       string `mapstructure:"PROD_DB_HOST"`
+	ProdDbPort       string `mapstructure:"PROD_DB_PORT"`
+	DevDbUsername    string `mapstructure:"DEV_DB_USERNAME"`
+	DevDbPassword    string `mapstructure:"DEV_DB_PASSWORD"`
+	DevDbName        string `mapstructure:"DEV_DB_NAME"`
+	DevDbHost        string `mapstructure:"DEV_DB_HOST"`
+	DevDbPort        string `mapstructure:"DEV_DB_PORT"`
+	LocalDbUsername  string `mapstructure:"LOCAL_DB_USERNAME"`
+	LocalDbPassword  string `mapstructure:"LOCAL_DB_PASSWORD"`
+	LocalDbName      string `mapstructure:"LOCAL_DB_NAME"`
+	LocalDbHost      string `mapstructure:"LOCAL_DB_HOST"`
+	LocalDbPort      string `mapstructure:"LOCAL_DB_PORT"`
 }
 
 var AppConfig *Config
 
 func LoadConfig() error {
+	viper.SetConfigFile("./.env")
+
+	// Enable Viper to read environment variables
+	viper.AutomaticEnv()
+
+	// Set default for env
+	viper.SetDefault("PORT", "4000")
+
+	// Try to read the configuration file (optional)
+	if err := viper.ReadInConfig(); err != nil {
+		log.Printf("Error reading config file, %s", err)
+	}
+
+	AppConfig = &Config{}
+	if err := viper.Unmarshal(AppConfig); err != nil {
+		return err
+	}
+
+	// Watch for changes in the config file and reload AppConfig when changes occur
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		// Reload the config file upon changes
+		if err := viper.Unmarshal(AppConfig); err != nil {
+			log.Printf("Error unmarshaling updated config: %s", err)
+		}
+	})
+
 	return nil
 }
