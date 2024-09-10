@@ -13,7 +13,7 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 - **Bluemonday**: HTML sanitizer for handling user-generated content securely.
 - **Viper**: For configuration management, with support for environment variables and multiple file formats (YAML, JSON, etc.), including auto-reloading of configuration files.
 - **Clean Architecture**: A layered approach to structure the codebase for maintainability and scalability.
-  
+
 ## Project Structure
 
 ```bash
@@ -24,7 +24,6 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 │   ├── config/              # Configuration files
 │   ├── database/            # Database setup and implementations (GORM)
 │   ├── logger/              # Logging setup (zap)
-│   ├── repositories/        # Repository implementations (GORM)
 │   ├── scheduler/           # Scheduling logic (gocron)
 ├── interfaces/              # Interface adapters (Delivery layer)
 │   ├── http/                # HTTP delivery (GoFiber routes)
@@ -37,19 +36,19 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 │   ├── model/               # Data transfer objects (DTOs) for mapping HTTP <-> domain
 ├── domain/                  # Core business logic
 │   ├── auth/                # Auth domain (user, role, permission)
-│   │   ├── entity/          # Domain entities for auth
+│   │   ├── entity/          # Domain entities/model for auth
 │   │   ├── service/         # Business logic and use cases for auth
 │   │   └── repository/      # Repository interfaces for auth
 │   ├── user/                # User domain logic
-│   │   ├── entity/          # User domain entities
+│   │   ├── entity/          # User domain entities/model
 │   │   ├── service/         # Business logic and use cases for user
 │   │   └── repository/      # Repository interfaces for user
 │   ├── role/                # Role domain logic
-│   │   ├── entity/          # Role domain entities
+│   │   ├── entity/          # Role domain entities/model
 │   │   ├── service/         # Business logic and use cases for role
 │   │   └── repository/      # Repository interfaces for role
 │   └── permission/          # Permission domain logic
-│       ├── entity/          # Permission domain entities
+│       ├── entity/          # Permission domain entities/model
 │       ├── service/         # Business logic and use cases for permission
 │       └── repository/      # Repository interfaces for permission
 ├── pkg/                     # Shared libraries and utilities
