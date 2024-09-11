@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/sayyidinside/gofiber-clean-fresh/domain/role"
 	"gorm.io/gorm"
 )
 
@@ -16,6 +17,7 @@ type User struct {
 	Email       string       `json:"email" gorm:"index"`
 	Password    string       `json:"password"`
 	ValidatedAt sql.NullTime `json:"validated_at" gorm:"index"`
+	Role        role.Role    `json:"role" gorm:"foreignKey:RoleID"`
 	gorm.Model
 }
 
