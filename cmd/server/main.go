@@ -5,9 +5,9 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/sayyidinside/gofiber-clean-fresh/cmd/bootstrap"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
-	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
@@ -23,12 +23,12 @@ func main() {
 
 	app.Use(helpers.ErrorHelper)
 
-	_, err := database.Connect()
+	db, err := database.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	routes.Setup(app)
+	bootstrap.Initialize(app, db)
 
 	app.Use(helpers.NotFoundHelper)
 
