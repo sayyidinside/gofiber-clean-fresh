@@ -1,4 +1,4 @@
-package utils
+package helpers
 
 import (
 	"log"
@@ -7,19 +7,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// NotFoundUtils handles 404 - Route not found
-func NotFoundUtil(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusNotFound).JSON(struct {
-		Success bool   `json:"success"`
-		Message string `json:"message"`
-	}{
+// NotFoundHelpers handles 404 - Route not found
+func NotFoundHelper(c *fiber.Ctx) error {
+	return ResponseFormatter(c, BaseResponse{
+		Status:  404,
 		Success: false,
-		Message: "Resource Not Found!",
+		Message: "Resource Not Found",
 	})
 }
 
-// ErrorUtil handles unhandled errors (500)
-func ErrorUtil(c *fiber.Ctx) error {
+// ErrorHelper handles unhandled errors (500)
+func ErrorHelper(c *fiber.Ctx) error {
 	// Try to handle the request and capture any unhandled errors
 	err := c.Next() // Process next middleware or route handler
 	if err != nil {
@@ -27,12 +25,10 @@ func ErrorUtil(c *fiber.Ctx) error {
 		log.Printf("Unhandled error: %v", err)
 
 		// Return a 500 Internal Server Error response
-		return c.Status(fiber.StatusNotFound).JSON(struct {
-			Success bool   `json:"success"`
-			Message string `json:"message"`
-		}{
+		return ResponseFormatter(c, BaseResponse{
+			Status:  500,
 			Success: false,
-			Message: "Internal Server Error .. error",
+			Message: "Internal Server Error",
 		})
 	}
 	return nil
@@ -47,12 +43,10 @@ func RecoverWithLog() fiber.Handler {
 				log.Printf("Stack trace: %s\n", string(debug.Stack()))
 
 				// Send the panic error to ErrorHandler
-				c.Status(fiber.StatusNotFound).JSON(struct {
-					Success bool   `json:"success"`
-					Message string `json:"message"`
-				}{
+				ResponseFormatter(c, BaseResponse{
+					Status:  500,
 					Success: false,
-					Message: "Internal Server Error .. panic",
+					Message: "Internal Server Error",
 				})
 			}
 		}()

@@ -8,7 +8,7 @@ import (
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes"
-	"github.com/sayyidinside/gofiber-clean-fresh/pkg/utils"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
 func main() {
@@ -19,9 +19,9 @@ func main() {
 	app := fiber.New()
 
 	// Recover panic
-	app.Use(utils.RecoverWithLog())
+	app.Use(helpers.RecoverWithLog())
 
-	app.Use(utils.ErrorUtil)
+	app.Use(helpers.ErrorHelper)
 
 	_, err := database.Connect()
 	if err != nil {
@@ -30,7 +30,7 @@ func main() {
 
 	routes.Setup(app)
 
-	app.Use(utils.NotFoundUtil)
+	app.Use(helpers.NotFoundHelper)
 
 	app.Listen(fmt.Sprintf(":%s", config.AppConfig.Port))
 }

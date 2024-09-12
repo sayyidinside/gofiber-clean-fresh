@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes/api/tests"
 	v1 "github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes/api/v1"
 )
 
@@ -18,4 +19,7 @@ func SetupApiRoutes(api fiber.Router) {
 
 	apiV1GroupRoutes := api.Group("/v1")
 	v1.SetupAPIV1Routes(apiV1GroupRoutes)
+
+	apiTestGroupRoutes := api.Group("/tests")
+	tests.SetupApiTestRoutes(apiTestGroupRoutes)
 }
