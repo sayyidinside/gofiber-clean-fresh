@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
@@ -56,7 +55,6 @@ func SetupApiTestRoutes(test fiber.Router) {
 			Message: "Data retrieved successfully",
 			Data:    &data,
 			Meta: &helpers.Meta{
-				RequestID:  uuid.New().String(),
 				Pagination: &pagination,
 			},
 		}

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/sayyidinside/gofiber-clean-fresh/cmd/bootstrap"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
@@ -17,6 +18,9 @@ func main() {
 	}
 
 	app := fiber.New()
+
+	// Add Request ID middleware
+	app.Use(requestid.New())
 
 	// Recover panic
 	app.Use(helpers.RecoverWithLog())

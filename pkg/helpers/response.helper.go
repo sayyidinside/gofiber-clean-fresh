@@ -1,6 +1,8 @@
 package helpers
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 type BaseResponse struct {
 	Status  int          `json:"status"`
@@ -42,5 +44,12 @@ type ErrorResponse struct {
 }
 
 func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
+	requestID := c.Locals("requestid").(string)
+	if res.Meta == nil {
+		res.Meta = &Meta{RequestID: requestID}
+	} else {
+		res.Meta.RequestID = requestID
+	}
+
 	return c.Status(res.Status).JSON(res)
 }
