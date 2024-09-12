@@ -20,21 +20,8 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 ├── cmd/                     # Main application entry points
 │   ├── server/              # HTTP server setup
 │   ├── worker/              # Background worker setup
-├── infrastructure/          # Infrastructure-specific code (frameworks, DB, etc.)
-│   ├── config/              # Configuration files
-│   ├── database/            # Database setup and implementations (GORM)
-│   ├── logger/              # Logging setup (zap)
-│   ├── scheduler/           # Scheduling logic (gocron)
-├── interfaces/              # Interface adapters (Delivery layer)
-│   ├── http/                # HTTP delivery (GoFiber routes)
-│   │   ├── routes/          # Route definitions
-│   │   ├── middleware/      # HTTP middleware (auth, JWT, role-based)
-│   │   ├── auth/            # HTTP handlers for auth-related routes
-│   │   ├── user/            # HTTP handlers for user-related routes
-│   │   ├── role/            # HTTP handlers for role-related routes
-│   │   └── permission/      # HTTP handlers for permission-related routes
-│   ├── model/               # Data transfer objects (DTOs) for mapping HTTP <-> domain
-├── domain/                  # Core business logic
+│   ├── bootstrap/           # depedency initialization
+├── domain/                  # Core business logic and domain-specific concerns
 │   ├── auth/                # Auth domain (user, role, permission)
 │   │   ├── entity/          # Domain entities/model for auth
 │   │   ├── service/         # Business logic and use cases for auth
@@ -51,6 +38,23 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 │       ├── entity/          # Permission domain entities/model
 │       ├── service/         # Business logic and use cases for permission
 │       └── repository/      # Repository interfaces for permission
+├── infrastructure/          # Infrastructure-specific code (frameworks, DB, etc.)
+│   ├── config/              # Configuration files (loading .env variables, app settings)
+│   ├── database/            # Database setup and implementations (GORM)
+│   ├── logger/              # Logging setup (zap)
+│   ├── scheduler/           # Scheduling logic (gocron)
+├── interfaces/              # Interface adapters (Delivery layer)
+│   ├── http/                # HTTP delivery (GoFiber routes)
+│   │   ├── auth/            # HTTP handlers for auth-related routes
+│   │   ├── handlers/        # General handlers (HTTP request handling logic)
+│   │   ├── middleware/      # HTTP middleware (auth, JWT, role-based)
+│   │   ├── permission/      # HTTP handlers for permission-related routes
+│   │   ├── role/            # HTTP handlers for role-related routes
+│   │   ├── routes/          # Route definitions for api
+│   │   │   └── v1/          # Versioned API routes (e.g., v1 API)
+│   │   │       └── users/   # Route related to user management
+│   │   └── user/            # HTTP handlers for user-related routes
+│   ├── model/               # Data transfer objects (DTOs) for mapping HTTP <-> domain
 ├── pkg/                     # Shared libraries and utilities
 │   └── utils/               # Generic utility functions (not domain-specific)
 ├── tests/                   # Unit and integration tests
