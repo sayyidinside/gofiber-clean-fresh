@@ -15,10 +15,20 @@ func Setup(app *fiber.App, handler *handlers.Handlers) {
 
 	cfg := config.AppConfig
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString(fmt.Sprintf("App is running, with name %s", cfg.AppName))
+		return c.JSON(struct {
+			Success bool   `json:"success"`
+			Message string `json:"message"`
+		}{
+			Success: true,
+			Message: fmt.Sprintf("App is running, with name %s", cfg.AppName),
+		})
 	})
 
 	app.Get("/panic", func(c *fiber.Ctx) error {
 		panic("This panic is caught by fiber")
+	})
+
+	app.Get("/error", func(c *fiber.Ctx) error {
+		return fmt.Errorf("Test error")
 	})
 }
