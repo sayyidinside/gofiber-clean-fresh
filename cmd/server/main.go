@@ -5,10 +5,11 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/sayyidinside/gofiber-clean-fresh/cmd/bootstrap"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
-	"github.com/sayyidinside/gofiber-clean-fresh/pkg/utils"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
 func main() {
@@ -18,10 +19,13 @@ func main() {
 
 	app := fiber.New()
 
-	// Recover panic
-	app.Use(utils.RecoverWithLog())
+	// Add Request ID middleware
+	app.Use(requestid.New())
 
-	app.Use(utils.ErrorUtil)
+	// Recover panic
+	app.Use(helpers.RecoverWithLog())
+
+	app.Use(helpers.ErrorHelper)
 
 	db, err := database.Connect()
 	if err != nil {
@@ -30,7 +34,7 @@ func main() {
 
 	bootstrap.Initialize(app, db)
 
-	app.Use(utils.NotFoundUtil)
+	app.Use(helpers.NotFoundHelper)
 
 	app.Listen(fmt.Sprintf(":%s", config.AppConfig.Port))
 }

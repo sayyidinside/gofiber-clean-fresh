@@ -56,6 +56,7 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 │   │   └── user/            # HTTP handlers for user-related routes
 │   ├── model/               # Data transfer objects (DTOs) for mapping HTTP <-> domain
 ├── pkg/                     # Shared libraries and utilities
+│   ├── helpers/             # Generic helper functions (not domain-specific)
 │   └── utils/               # Generic utility functions (not domain-specific)
 ├── tests/                   # Unit and integration tests
 └── .env                     # Environment variables
