@@ -17,7 +17,11 @@ func main() {
 		log.Println(err.Error())
 	}
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName:                 config.AppConfig.AppName,
+		EnableIPValidation:      true,
+		EnableTrustedProxyCheck: true,
+	})
 
 	// Add Request ID middleware
 	app.Use(requestid.New())

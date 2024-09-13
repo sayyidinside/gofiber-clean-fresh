@@ -20,6 +20,7 @@ func Setup(app *fiber.App, handler *handlers.Handlers) {
 
 	// Apply middleware for general API routes
 	api.Use(middleware.CORS())
+	api.Use(middleware.RateLimiter())
 
 	v1.RegisterRoutes(api, handler)
 	tests.SetupApiTestRoutes(test)
