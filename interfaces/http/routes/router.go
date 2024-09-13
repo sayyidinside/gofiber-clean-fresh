@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handlers"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
@@ -19,6 +20,7 @@ func Setup(app *fiber.App, handler *handlers.Handlers) {
 	test := app.Group("/tests")
 
 	// Apply middleware for general API routes
+	api.Use(helmet.New())
 	api.Use(middleware.CORS())
 	api.Use(middleware.RateLimiter())
 
