@@ -23,6 +23,7 @@ func Setup(app *fiber.App, handler *handlers.Handlers) {
 	api.Use(helmet.New())
 	api.Use(middleware.CORS())
 	api.Use(middleware.RateLimiter())
+	api.Use(middleware.Cache())
 
 	v1.RegisterRoutes(api, handler)
 	tests.SetupApiTestRoutes(test)
