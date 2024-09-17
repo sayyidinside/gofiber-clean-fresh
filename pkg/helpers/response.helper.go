@@ -44,15 +44,5 @@ type ErrorResponse struct {
 }
 
 func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
-	requestID := c.Locals("requestid").(string)
-
-	if res.Message != "Resource Not Found" {
-		if res.Meta == nil {
-			res.Meta = &Meta{RequestID: requestID}
-		} else {
-			res.Meta.RequestID = requestID
-		}
-	}
-
 	return c.Status(res.Status).JSON(res)
 }

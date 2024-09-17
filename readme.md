@@ -22,22 +22,9 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 │   ├── worker/              # Background worker setup
 │   ├── bootstrap/           # depedency initialization
 ├── domain/                  # Core business logic and domain-specific concerns
-│   ├── auth/                # Auth domain (user, role, permission)
-│   │   ├── entity/          # Domain entities/model for auth
-│   │   ├── service/         # Business logic and use cases for auth
-│   │   └── repository/      # Repository interfaces for auth
-│   ├── user/                # User domain logic
-│   │   ├── entity/          # User domain entities/model
-│   │   ├── service/         # Business logic and use cases for user
-│   │   └── repository/      # Repository interfaces for user
-│   ├── role/                # Role domain logic
-│   │   ├── entity/          # Role domain entities/model
-│   │   ├── service/         # Business logic and use cases for role
-│   │   └── repository/      # Repository interfaces for role
-│   └── permission/          # Permission domain logic
-│       ├── entity/          # Permission domain entities/model
-│       ├── service/         # Business logic and use cases for permission
-│       └── repository/      # Repository interfaces for permission
+│   ├── entity/              # Defines the core business entities (user, role, permission, etc)
+│   ├── repository/          # Defines the interfaces for interacting with data persistence.
+│   └── service/             # Contains the business logic
 ├── infrastructure/          # Infrastructure-specific code (frameworks, DB, etc.)
 │   ├── config/              # Configuration files (loading .env variables, app settings)
 │   ├── database/            # Database setup and implementations (GORM)
@@ -46,14 +33,13 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 ├── interfaces/              # Interface adapters (Delivery layer)
 │   ├── http/                # HTTP delivery (GoFiber routes)
 │   │   ├── auth/            # HTTP handlers for auth-related routes
-│   │   ├── handlers/        # General handlers (HTTP request handling logic)
+│   │   ├── handler/         # General handlers (HTTP request handling logic)
 │   │   ├── middleware/      # HTTP middleware (auth, JWT, role-based)
 │   │   ├── permission/      # HTTP handlers for permission-related routes
 │   │   ├── role/            # HTTP handlers for role-related routes
 │   │   ├── routes/          # Route definitions for api
 │   │   │   └── v1/          # Versioned API routes (e.g., v1 API)
 │   │   │       └── users/   # Route related to user management
-│   │   └── user/            # HTTP handlers for user-related routes
 │   ├── model/               # Data transfer objects (DTOs) for mapping HTTP <-> domain
 ├── pkg/                     # Shared libraries and utilities
 │   ├── helpers/             # Generic helper functions (not domain-specific)

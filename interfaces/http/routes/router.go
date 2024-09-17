@@ -6,14 +6,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
-	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handlers"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes/tests"
 	v1 "github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes/v1"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
-func Setup(app *fiber.App, handler *handlers.Handlers) {
+func Setup(app *fiber.App, handlers *handler.Handlers) {
 	cfg := config.AppConfig
 
 	api := app.Group("/api")
@@ -25,7 +25,7 @@ func Setup(app *fiber.App, handler *handlers.Handlers) {
 	api.Use(middleware.RateLimiter())
 	api.Use(middleware.Cache())
 
-	v1.RegisterRoutes(api, handler)
+	v1.RegisterRoutes(api, handlers)
 	tests.SetupApiTestRoutes(test)
 
 	app.Get("/", func(c *fiber.Ctx) error {

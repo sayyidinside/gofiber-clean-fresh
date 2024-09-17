@@ -4,13 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"os/user"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sayyidinside/gofiber-clean-fresh/domain/module"
-	"github.com/sayyidinside/gofiber-clean-fresh/domain/permission"
-	"github.com/sayyidinside/gofiber-clean-fresh/domain/role"
-	"github.com/sayyidinside/gofiber-clean-fresh/domain/user"
+	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -21,7 +19,7 @@ func Seeding(db *gorm.DB) {
 
 	{ // Seeding Module
 		var totalModule int64
-		tx.Model(&module.Module{}).Where("name IN ?", []string{"User", "Role", "Permission", "Module"}).Count(&totalModule)
+		tx.Model(&entity.Module{}).Where("name IN ?", []string{"User", "Role", "Permission", "Module"}).Count(&totalModule)
 		if totalModule != 4 {
 			if err := seedingModuleUserManagement(tx); err != nil {
 				log.Printf("Seeding module user management failed: %v", err)
@@ -35,7 +33,7 @@ func Seeding(db *gorm.DB) {
 
 	{ // Seeding permission user management
 		var totalPermission int64
-		tx.Model(&permission.Permission{}).Count(&totalPermission)
+		tx.Model(&entity.Permission{}).Count(&totalPermission)
 		if totalPermission == 0 {
 			if err := seedingPermissionUserManagement(tx); err != nil {
 				log.Printf("Seeding permission user management failed: %v", err)
@@ -49,7 +47,7 @@ func Seeding(db *gorm.DB) {
 
 	{ // Seeding role admin
 		var totalRoleAdmin int64
-		tx.Model(&role.Role{}).Where("name = ?", "Admin").Count(&totalRoleAdmin)
+		tx.Model(&entity.Role{}).Where("name = ?", "Admin").Count(&totalRoleAdmin)
 		if totalRoleAdmin == 0 {
 			if err := seedingRoleAdmin(tx); err != nil {
 				log.Printf("Seeding role admin failed: %v", err)
@@ -82,17 +80,17 @@ func Seeding(db *gorm.DB) {
 }
 
 func seedingModuleUserManagement(tx *gorm.DB) error {
-	modules := []module.Module{}
+	modules := []entity.Module{}
 
 	var userModule int64
-	tx.Model(&module.Module{}).Where("name = ?", "User").Count(&userModule)
+	tx.Model(&entity.Module{}).Where("name = ?", "User").Count(&userModule)
 	if userModule == 0 {
 		userUUID, err := uuid.Parse("1234f6bf-8a3d-46de-a89d-ed901f90a7ad")
 		if err != nil {
 			return err
 		}
 
-		modules = append(modules, module.Module{
+		modules = append(modules, entity.Module{
 			Name: "User",
 			UUID: userUUID,
 		})
@@ -101,14 +99,14 @@ func seedingModuleUserManagement(tx *gorm.DB) error {
 	}
 
 	var roleModule int64
-	tx.Model(&module.Module{}).Where("name = ?", "Role").Count(&roleModule)
+	tx.Model(&entity.Module{}).Where("name = ?", "Role").Count(&roleModule)
 	if roleModule == 0 {
 		roleUUID, err := uuid.Parse("1235f6bf-8a3d-46de-a89d-ed901f90a7ad")
 		if err != nil {
 			return err
 		}
 
-		modules = append(modules, module.Module{
+		modules = append(modules, entity.Module{
 			Name: "Role",
 			UUID: roleUUID,
 		})
@@ -117,14 +115,14 @@ func seedingModuleUserManagement(tx *gorm.DB) error {
 	}
 
 	var permissionModule int64
-	tx.Model(&module.Module{}).Where("name = ?", "Permission").Count(&permissionModule)
+	tx.Model(&entity.Module{}).Where("name = ?", "Permission").Count(&permissionModule)
 	if permissionModule == 0 {
 		permissionUUID, err := uuid.Parse("1236f6bf-8a3d-46de-a89d-ed901f90a7ad")
 		if err != nil {
 			return err
 		}
 
-		modules = append(modules, module.Module{
+		modules = append(modules, entity.Module{
 			Name: "Permission",
 			UUID: permissionUUID,
 		})
@@ -133,14 +131,14 @@ func seedingModuleUserManagement(tx *gorm.DB) error {
 	}
 
 	var moduleModule int64
-	tx.Model(&module.Module{}).Where("name = ?", "Module").Count(&moduleModule)
+	tx.Model(&entity.Module{}).Where("name = ?", "Module").Count(&moduleModule)
 	if moduleModule == 0 {
 		moduleUUID, err := uuid.Parse("1237f6bf-8a3d-46de-a89d-ed901f90a7ad")
 		if err != nil {
 			return err
 		}
 
-		modules = append(modules, module.Module{
+		modules = append(modules, entity.Module{
 			Name: "Module",
 			UUID: moduleUUID,
 		})
@@ -156,11 +154,11 @@ func seedingModuleUserManagement(tx *gorm.DB) error {
 }
 
 func seedingPermissionUserManagement(tx *gorm.DB) error {
-	permissions := []permission.Permission{}
+	permissions := []entity.Permission{}
 
 	// Permission for user module
 	{
-		var userModule module.Module
+		var userModule entity.Module
 		if result := tx.Limit(1).Where("name = ?", "User").Find(&userModule); result.RowsAffected == 0 {
 			return errors.New("user module not found")
 		}
@@ -182,7 +180,7 @@ func seedingPermissionUserManagement(tx *gorm.DB) error {
 			return nil
 		}
 
-		userPermissions := []permission.Permission{
+		userPermissions := []entity.Permission{
 			{
 				UUID:     userViewUUID,
 				Name:     "View User",
@@ -210,7 +208,7 @@ func seedingPermissionUserManagement(tx *gorm.DB) error {
 
 	// Permission for role module
 	{
-		var roleModule module.Module
+		var roleModule entity.Module
 		if result := tx.Limit(1).Where("name = ?", "Role").Find(&roleModule); result.RowsAffected == 0 {
 			return errors.New("role module not found")
 		}
@@ -232,7 +230,7 @@ func seedingPermissionUserManagement(tx *gorm.DB) error {
 			return nil
 		}
 
-		rolePermissions := []permission.Permission{
+		rolePermissions := []entity.Permission{
 			{
 				UUID:     roleViewUUID,
 				Name:     "View Role",
@@ -260,7 +258,7 @@ func seedingPermissionUserManagement(tx *gorm.DB) error {
 
 	// Permission for permission module
 	{
-		var permissionModule module.Module
+		var permissionModule entity.Module
 		if result := tx.Limit(1).Where("name = ?", "Permission").Find(&permissionModule); result.RowsAffected == 0 {
 			return errors.New("permission module not found")
 		}
@@ -282,7 +280,7 @@ func seedingPermissionUserManagement(tx *gorm.DB) error {
 			return nil
 		}
 
-		permissionPermissions := []permission.Permission{
+		permissionPermissions := []entity.Permission{
 			{
 				UUID:     permissionViewUUID,
 				Name:     "View Permission",
@@ -310,7 +308,7 @@ func seedingPermissionUserManagement(tx *gorm.DB) error {
 
 	// Permission for module module
 	{
-		var moduleModule module.Module
+		var moduleModule entity.Module
 		if result := tx.Limit(1).Where("name = ?", "Permission").Find(&moduleModule); result.RowsAffected == 0 {
 			return errors.New("module module not found")
 		}
@@ -332,7 +330,7 @@ func seedingPermissionUserManagement(tx *gorm.DB) error {
 			return nil
 		}
 
-		modulePermissions := []permission.Permission{
+		modulePermissions := []entity.Permission{
 			{
 				UUID:     moduleViewUUID,
 				Name:     "View Permission",
@@ -371,7 +369,7 @@ func seedingRoleAdmin(tx *gorm.DB) error {
 		return err
 	}
 
-	adminRole := role.Role{
+	adminRole := entity.Role{
 		UUID:    adminUUID,
 		Name:    "Admin",
 		IsAdmin: true,
@@ -382,8 +380,8 @@ func seedingRoleAdmin(tx *gorm.DB) error {
 	}
 
 	// Get all permission
-	var permissions []permission.Permission
-	tx.Model(&permission.Permission{}).Find(&permissions)
+	var permissions []entity.Permission
+	tx.Model(&entity.Permission{}).Find(&permissions)
 
 	// Append all permissions to many to many table "role_permissions"
 	tx.Model(&adminRole).Association("Permissions").Append(&permissions)
@@ -406,12 +404,12 @@ func seedingUserAdmin(tx *gorm.DB) error {
 	}
 
 	// Find admin role
-	var adminRole role.Role
+	var adminRole entity.Role
 	if result := tx.Limit(1).Where("name = ?", "Admin").Find(&adminRole); result.RowsAffected == 0 {
 		return errors.New("admin role not found")
 	}
 
-	user := user.User{
+	user := entity.User{
 		UUID:        adminUUID,
 		Name:        "Admin",
 		RoleID:      adminRole.ID,
