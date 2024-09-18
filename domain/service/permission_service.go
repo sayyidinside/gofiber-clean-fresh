@@ -12,7 +12,7 @@ import (
 
 type PermissionService interface {
 	GetByID(ctx context.Context, id uint) helpers.BaseResponse
-	GetAll(ctx context.Context, query *model.QueryGet) helpers.BaseResponse
+	GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse
 	Create()
 }
 
@@ -53,7 +53,7 @@ func (s *permissionService) GetByID(ctx context.Context, id uint) helpers.BaseRe
 	}
 }
 
-func (s *permissionService) GetAll(ctx context.Context, query *model.QueryGet) helpers.BaseResponse {
+func (s *permissionService) GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse {
 	permissions, err := s.repository.FindAll(ctx, query)
 	if permissions == nil || err != nil {
 		return helpers.BaseResponse{
@@ -67,11 +67,18 @@ func (s *permissionService) GetAll(ctx context.Context, query *model.QueryGet) h
 
 	data := interface{}(permissionModels)
 
+	totalData := s.repository.Count(ctx)
+
+	pagination := helpers.GeneratePaginationMetadata(query, url, totalData)
+
 	return helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Permission data found",
 		Data:    &data,
+		Meta: &helpers.Meta{
+			Pagination: pagination,
+		},
 	}
 }
 

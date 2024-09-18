@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -39,10 +37,10 @@ func (h *PermissionHandler) GetAllPermission(c *fiber.Ctx) error {
 		return err
 	}
 
-	jsonData, _ := json.MarshalIndent(query, "", "  ")
-	log.Println(string(jsonData))
+	model.SanitizeQueryGet(&query)
 
-	response := h.service.GetAll(c.Context(), &query)
+	url := c.BaseURL() + c.OriginalURL()
+	response := h.service.GetAll(c.Context(), &query, url)
 
 	return helpers.ResponseFormatter(c, response)
 }

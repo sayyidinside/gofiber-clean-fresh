@@ -13,6 +13,8 @@ import (
 type PermissionRepository interface {
 	FindByID(ctx context.Context, id uint) (*entity.Permission, error)
 	FindAll(ctx context.Context, query *model.QueryGet) (*[]entity.Permission, error)
+	Count(ctx context.Context) int64
+	CountUnscoped(ctx context.Context) int64
 	// Create(*Permission) error
 }
 
@@ -82,7 +84,7 @@ func (r *permissionRepository) FindAll(ctx context.Context, query *model.QueryGe
 func (r *permissionRepository) Count(ctx context.Context) int64 {
 	var total int64
 
-	r.DB.Model(&entity.Permission{}).Count(&total)
+	r.DB.WithContext(ctx).Model(&entity.Permission{}).Count(&total)
 
 	return total
 }
@@ -90,7 +92,7 @@ func (r *permissionRepository) Count(ctx context.Context) int64 {
 func (r *permissionRepository) CountUnscoped(ctx context.Context) int64 {
 	var total int64
 
-	r.DB.Model(&entity.Permission{}).Unscoped().Count(&total)
+	r.DB.WithContext(ctx).Model(&entity.Permission{}).Unscoped().Count(&total)
 
 	return total
 }
