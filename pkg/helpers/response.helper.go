@@ -31,6 +31,8 @@ type Pagination struct {
 	TotalItems  int     `json:"total_items"`
 	TotalPages  int     `json:"total_pages"`
 	ItemPerPage int     `json:"item_per_page"`
+	FromRow     int     `json:"from_row"`
+	ToRow       int     `json:"to_row"`
 	Self        string  `json:"self"`
 	Next        *string `json:"next"`
 	Prev        *string `json:"prev"`

@@ -26,11 +26,11 @@ func Paginate(query *model.QueryGet) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func GeneratePaginationMetadata(query *model.QueryGet, url *string, totalRows int64) *Pagination {
+func GeneratePaginationMetadata(query *model.QueryGet, url string, totalData int64) *Pagination {
 	// initilize required variable
 	var nextPage, previousPage string
-	// var fromRow, toRow int
-	totalRow := int(totalRows)
+	var fromRow, toRow int
+	totalRow := int(totalData)
 
 	// getting and setting page
 	page, _ := strconv.Atoi(query.Page)
@@ -52,31 +52,31 @@ func GeneratePaginationMetadata(query *model.QueryGet, url *string, totalRows in
 	// lastPage := fmt.Sprintf("%s?page=%d&limit=%d", *url, totalPages, limit)
 
 	// Set url for current, previous, and next page
-	currentPage := fmt.Sprintf("%s?page=%d&limit=%d", *url, page, limit)
+	currentPage := fmt.Sprintf("%s?page=%d&limit=%d", url, page, limit)
 	if page > 1 {
-		previousPage = fmt.Sprintf("%s?page=%d&limit=%d", *url, page-1, limit)
+		previousPage = fmt.Sprintf("%s?page=%d&limit=%d", url, page-1, limit)
 	}
 	if page < totalPages {
-		nextPage = fmt.Sprintf("%s?page=%d&limit=%d", *url, page+1, limit)
+		nextPage = fmt.Sprintf("%s?page=%d&limit=%d", url, page+1, limit)
 	}
 
 	// Set from and to row (index)
-	// if page == 1 {
-	// 	fromRow = 1
-	// 	if limit > totalRow {
-	// 		toRow = totalRow
-	// 	} else {
-	// 		toRow = limit
-	// 	}
-	// } else if page <= totalPages {
-	// 	fromRow = ((page - 1) * limit) + 1
+	if page == 1 {
+		fromRow = 1
+		if limit > totalRow {
+			toRow = totalRow
+		} else {
+			toRow = limit
+		}
+	} else if page <= totalPages {
+		fromRow = ((page - 1) * limit) + 1
 
-	// 	if page == totalPages {
-	// 		toRow = totalRow
-	// 	} else {
-	// 		toRow = page * limit
-	// 	}
-	// }
+		if page == totalPages {
+			toRow = totalRow
+		} else {
+			toRow = page * limit
+		}
+	}
 
 	return &Pagination{
 		CurrentPage: page,
@@ -86,7 +86,7 @@ func GeneratePaginationMetadata(query *model.QueryGet, url *string, totalRows in
 		Self:        currentPage,
 		Prev:        &previousPage,
 		Next:        &nextPage,
-		// FromRow:     fromRow,
-		// ToRow:       toRow,
+		FromRow:     fromRow,
+		ToRow:       toRow,
 	}
 }
