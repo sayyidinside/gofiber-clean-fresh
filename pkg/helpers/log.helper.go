@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -36,24 +37,43 @@ func InitLogger() {
 	// Console output configuration
 	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
 
-	// API Logger setup
-	apiLogFile, err := os.OpenFile("storage/logs/api.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
-	apiFileWriter := zapcore.AddSync(apiLogFile)
+	// // API Logger setup
+	// apiLogFile, err := os.OpenFile("storage/logs/api.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// apiFileWriter := zapcore.AddSync(apiLogFile)
+
+	// API Logger setup with lumberjack for log rotation
+	apiFileWriter := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   "storage/logs/api.log", // Log file path
+		MaxSize:    10,                     // Maximum size in megabytes before it gets rotated
+		MaxBackups: 3,                      // Maximum number of old log files to keep
+		MaxAge:     30,                     // Maximum number of days to retain old log files
+		Compress:   true,                   // Compress the rotated log files
+	})
+
 	apiCore := zapcore.NewTee(
 		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel),
 		zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), apiFileWriter, zapcore.InfoLevel),
 	)
 	apiLogger = zap.New(apiCore)
 
-	// System Logger setup
-	systemLogFile, err := os.OpenFile("storage/logs/system.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
-	systemFileWriter := zapcore.AddSync(systemLogFile)
+	// // System Logger setup
+	// systemLogFile, err := os.OpenFile("storage/logs/system.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// systemFileWriter := zapcore.AddSync(systemLogFile)
+
+	// System Logger setup with lumberjack for log rotation
+	systemFileWriter := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   "storage/logs/system.log", // Log file path
+		MaxSize:    10,                        // Maximum size in megabytes before it gets rotated
+		MaxBackups: 3,                         // Maximum number of old log files to keep
+		MaxAge:     30,                        // Maximum number of days to retain old log files
+		Compress:   true,                      // Compress the rotated log files
+	})
 	systemCore := zapcore.NewTee(
 		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel),
 		zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), systemFileWriter, zapcore.InfoLevel),

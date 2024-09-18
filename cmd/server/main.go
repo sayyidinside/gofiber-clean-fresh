@@ -20,7 +20,11 @@ func main() {
 
 	helpers.InitLogger()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName:                 config.AppConfig.AppName,
+		EnableIPValidation:      true,
+		EnableTrustedProxyCheck: true,
+	})
 
 	// Initialize default config
 	app.Use(logger.New())
