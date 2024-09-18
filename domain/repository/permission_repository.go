@@ -45,20 +45,31 @@ func (r *permissionRepository) FindByUUID(uuid uuid.UUID) (*entity.Permission, e
 func (r *permissionRepository) FindAll(ctx context.Context, query *model.QueryGet) (*[]entity.Permission, error) {
 	var permissions []entity.Permission
 
-	tx := r.DB.WithContext(ctx)
+	tx := r.DB.WithContext(ctx).Model(&entity.Permission{}).
+		Joins("JOIN modules on modules.id = permissions.module_id")
 
-	// pagination
-	tx = tx.Scopes(helpers.Paginate(query))
+	{ // Apply Query Operation
 
-	{ // Apply Order
+		// map value for parsing user query input
 		var allowedFields = map[string]string{
-			"name":    "permissions.name",
-			"module":  "permissions.module_id",
-			"updated": "permssions.updated_at",
-			"created": "permssions.created_at",
+			"name":        "permissions.name",
+			"module":      "permissions.module_id",
+			"updated":     "permssions.updated_at",
+			"created":     "permssions.created_at",
+			"module_name": "modules.name",
 		}
 
+		// pagination
+		tx = tx.Scopes(helpers.Paginate(query))
+
+		// Order
 		tx = tx.Scopes(helpers.Order(query, allowedFields))
+
+		// Apply Filter
+		tx = tx.Scopes(helpers.Filter(query, allowedFields))
+
+		// Apply Search
+		tx = tx.Scopes(helpers.Search(query, allowedFields))
 	}
 
 	if err := tx.Find(&permissions).Error; err != nil {
