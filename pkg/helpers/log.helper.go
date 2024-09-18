@@ -14,6 +14,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/natefinch/lumberjack"
+	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -33,12 +34,12 @@ func InitLogger() {
 	}
 
 	// Encoder configuration
+	cfg := config.AppConfig
+	debugMode := cfg.Debug
+
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.TimeKey = "time"
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	// Console output configuration
-	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
 
 	// Dynamic log filename based on current month
 	currentTime := time.Now()
@@ -52,12 +53,6 @@ func InitLogger() {
 		Compress:   true,           // Compress old log files
 	})
 
-	apiCore := zapcore.NewTee(
-		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel),
-		zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), apiFileWriter, zapcore.InfoLevel),
-	)
-	apiLogger = zap.New(apiCore)
-
 	// Dynamic log filename based on current month
 	logSysFilename := "storage/logs/system/system_" + currentTime.Format("2006-01") + ".log" // Format as YYYY-MM
 
@@ -68,11 +63,22 @@ func InitLogger() {
 		MaxBackups: 12,             // Keep 12 backups (1 per month for a year)
 		Compress:   true,           // Compress old log files
 	})
-	systemCore := zapcore.NewTee(
-		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel),
-		zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), systemFileWriter, zapcore.InfoLevel),
-	)
-	systemLogger = zap.New(systemCore)
+
+	// Console output configuration
+	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
+
+	var apiCores []zapcore.Core
+	var systemCores []zapcore.Core
+
+	if debugMode {
+		apiCores = append(apiCores, zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel))
+		systemCores = append(systemCores, zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel))
+	}
+	apiCores = append(apiCores, zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), apiFileWriter, zapcore.InfoLevel))
+	systemCores = append(systemCores, zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), systemFileWriter, zapcore.InfoLevel))
+
+	apiLogger = zap.New(zapcore.NewTee(apiCores...))
+	systemLogger = zap.New(zapcore.NewTee(systemCores...))
 }
 
 func APILogger(logger *zap.Logger) fiber.Handler {
@@ -180,7 +186,6 @@ func APILogger(logger *zap.Logger) fiber.Handler {
 			logFunc = apiLogger.Warn
 		}
 
-		fmt.Println(time.Now())
 		logFunc(message,
 			zap.String("identifier", identifier),
 			zap.Time("timestamp", time.Now()),
