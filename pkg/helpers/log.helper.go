@@ -25,32 +25,31 @@ var (
 
 func InitLogger() {
 	// Create logs directory if it does not exist
-	if err := os.MkdirAll("storage/logs", os.ModePerm); err != nil {
+	if err := os.MkdirAll("storage/logs/api", os.ModePerm); err != nil {
+		panic(err)
+	}
+	if err := os.MkdirAll("storage/logs/system", os.ModePerm); err != nil {
 		panic(err)
 	}
 
 	// Encoder configuration
 	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.TimeKey = "timestamp"
+	encoderConfig.TimeKey = "time"
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
 	// Console output configuration
 	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
 
-	// // API Logger setup
-	// apiLogFile, err := os.OpenFile("storage/logs/api.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// apiFileWriter := zapcore.AddSync(apiLogFile)
+	// Dynamic log filename based on current month
+	currentTime := time.Now()
+	logAPIFilename := "storage/logs/api/api_" + currentTime.Format("2006-01") + ".log" // Format as YYYY-MM
 
 	// API Logger setup with lumberjack for log rotation
 	apiFileWriter := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   "storage/logs/api.log", // Log file path
-		MaxSize:    10,                     // Maximum size in megabytes before it gets rotated
-		MaxBackups: 3,                      // Maximum number of old log files to keep
-		MaxAge:     30,                     // Maximum number of days to retain old log files
-		Compress:   true,                   // Compress the rotated log files
+		Filename:   logAPIFilename, // Log file path
+		MaxAge:     365,            // Keep log files for 365 days (1 year)
+		MaxBackups: 12,             // Keep 12 backups (1 per month for a year)
+		Compress:   true,           // Compress old log files
 	})
 
 	apiCore := zapcore.NewTee(
@@ -59,20 +58,15 @@ func InitLogger() {
 	)
 	apiLogger = zap.New(apiCore)
 
-	// // System Logger setup
-	// systemLogFile, err := os.OpenFile("storage/logs/system.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// systemFileWriter := zapcore.AddSync(systemLogFile)
+	// Dynamic log filename based on current month
+	logSysFilename := "storage/logs/system/system_" + currentTime.Format("2006-01") + ".log" // Format as YYYY-MM
 
 	// System Logger setup with lumberjack for log rotation
 	systemFileWriter := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   "storage/logs/system.log", // Log file path
-		MaxSize:    10,                        // Maximum size in megabytes before it gets rotated
-		MaxBackups: 3,                         // Maximum number of old log files to keep
-		MaxAge:     30,                        // Maximum number of days to retain old log files
-		Compress:   true,                      // Compress the rotated log files
+		Filename:   logSysFilename, // Log file path
+		MaxAge:     365,            // Keep log files for 365 days (1 year)
+		MaxBackups: 12,             // Keep 12 backups (1 per month for a year)
+		Compress:   true,           // Compress old log files
 	})
 	systemCore := zapcore.NewTee(
 		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.DebugLevel),
