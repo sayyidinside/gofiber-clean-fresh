@@ -25,10 +25,12 @@ func Setup(app *fiber.App, handler *handlers.Handlers) {
 	tests.SetupApiTestRoutes(test)
 
 	app.Get("/", func(c *fiber.Ctx) error {
+		log := helpers.CreateLog(app)
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  200,
 			Success: true,
 			Message: fmt.Sprintf("App is running, with name %s", cfg.AppName),
+			Log:     &log,
 		})
 	})
 }

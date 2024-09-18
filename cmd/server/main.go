@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/sayyidinside/gofiber-clean-fresh/cmd/bootstrap"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
@@ -17,10 +18,17 @@ func main() {
 		log.Println(err.Error())
 	}
 
+	helpers.InitLogger()
+
 	app := fiber.New()
+
+	// Initialize default config
+	app.Use(logger.New())
 
 	// Add Request ID middleware
 	app.Use(requestid.New())
+
+	app.Use(helpers.APILogger(helpers.GetAPILogger()))
 
 	// Recover panic
 	app.Use(helpers.RecoverWithLog())
