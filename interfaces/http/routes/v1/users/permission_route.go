@@ -10,4 +10,7 @@ func RegisterPermissionRoutes(route fiber.Router, handler *handler.PermissionHan
 
 	user.Get("/", handler.GetAllPermission)
 	user.Get("/:id", handler.GetPermission)
+	user.Post("", handler.CreatePermission)
+	user.Put("/:id", handler.UpdatePermission)
+	user.Delete("/:id", handler.DeletePermission)
 }

@@ -24,8 +24,8 @@ func NewModuleRepository(db *gorm.DB) ModuleRepository {
 
 func (r *moduleRepository) FindByID(ctx context.Context, id uint) (*entity.Module, error) {
 	var module entity.Module
-	if err := r.DB.WithContext(ctx).Limit(1).Where("id = ?", id).Find(&module).Error; err != nil {
-		return nil, err
+	if result := r.DB.WithContext(ctx).Limit(1).Where("id = ?", id).Find(&module); result.Error != nil || result.RowsAffected == 0 {
+		return nil, result.Error
 	}
 
 	return &module, nil

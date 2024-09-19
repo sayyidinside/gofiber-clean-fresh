@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
 )
 
@@ -25,15 +26,20 @@ type (
 		Module   string    `json:"module"`
 		ModuleID uint      `json:"module_id"`
 	}
+
+	PermissionInput struct {
+		Name     string `json:"name" form:"name" xml:"name" validate:"required"`
+		ModuleID uint   `json:"module_id" form:"module_id" xml:"module_id" validate:"required,numeric"`
+	}
 )
 
-func PermissionToDetailModel(permission *entity.Permission, moduleName string) *PermissionDetail {
+func PermissionToDetailModel(permission *entity.Permission) *PermissionDetail {
 	return &PermissionDetail{
 		ID:        permission.ID,
 		UUID:      permission.UUID,
 		Name:      permission.Name,
-		Module:    moduleName,
-		ModuleID:  permission.ID,
+		Module:    permission.Module.Name,
+		ModuleID:  permission.Module.ID,
 		CreatedAt: permission.CreatedAt,
 		UpdatedAt: permission.UpdatedAt,
 	}
@@ -44,7 +50,8 @@ func PermissionToListModel(permission *entity.Permission) *PermissionList {
 		ID:       permission.ID,
 		UUID:     permission.UUID,
 		Name:     permission.Name,
-		ModuleID: permission.ID,
+		ModuleID: permission.Module.ID,
+		Module:   permission.Module.Name,
 	}
 }
 
@@ -56,4 +63,18 @@ func PermissionToListModels(permissions *[]entity.Permission) *[]PermissionList 
 	}
 
 	return &listModels
+}
+
+func SanitizePermissionInput(input *PermissionInput) {
+	sanitizer := bluemonday.StrictPolicy()
+
+	input.Name = sanitizer.Sanitize(input.Name)
+}
+
+func PermissionInputToEntity(input *PermissionInput) *entity.Permission {
+
+	return &entity.Permission{
+		Name:     input.Name,
+		ModuleID: input.ModuleID,
+	}
 }
