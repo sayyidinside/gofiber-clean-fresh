@@ -24,6 +24,40 @@ var (
 	systemLogger *zap.Logger
 )
 
+var LogAPIChannel = make(chan LogAPIParam, 100)
+var LogSysChannel = make(chan LogSystemParam, 100)
+
+type LogAPIParam struct {
+	StatusCode    int                    `json:"status_code"`
+	Message       string                 `json:"message"`
+	Identifier    string                 `json:"identifier"`
+	Timestamp     time.Time              `json:"timestamp"`
+	HTTPMethod    string                 `json:"http_method"`
+	RequestHeader interface{}            `json:"request_header"`
+	QueryParams   interface{}            `json:"query_params"`
+	RequestBody   interface{}            `json:"request_body"`
+	ResponseCode  string                 `json:"response_code"`
+	ResponseBody  map[string]interface{} `json:"response_body"`
+	Endpoint      string                 `json:"endpoint"`
+	OriginalURL   string                 `json:"original_url"`
+	UserAgent     string                 `json:"user_agent"`
+	ClientIP      string                 `json:"client_ip"`
+	Username      string                 `json:"username"`
+	StartTime     time.Time              `json:"start_time"`
+	EndTime       time.Time              `json:"end_time"`
+}
+
+type LogSystemParam struct {
+	Identifier string
+	StatusCode int
+	Location   string
+	Message    string
+	StartTime  time.Time
+	EndTime    time.Time
+	Username   string
+	Err        interface{}
+}
+
 func InitLogger() {
 	// Create logs directory if it does not exist
 	if err := os.MkdirAll("storage/logs/api", os.ModePerm); err != nil {
@@ -145,7 +179,7 @@ func APILogger(logger *zap.Logger) fiber.Handler {
 				"raw": string(responseBody),
 			}
 		} else {
-			redactFields(jsonResponseBody, []string{"key", "token", "password", "re_password", "old_password", "raw"})
+			RedactFields(jsonResponseBody, []string{"key", "token", "password", "re_password", "old_password", "raw"})
 		}
 
 		// Redact Authorization header
@@ -178,48 +212,62 @@ func APILogger(logger *zap.Logger) fiber.Handler {
 			message = fmt.Sprintf("API Log | %s", msg.(string))
 		}
 
-		// Log the request and response
-		logFunc := apiLogger.Info
-		if statusCode >= 500 {
-			logFunc = apiLogger.Error
-		} else if statusCode >= 400 {
-			logFunc = apiLogger.Warn
+		apiLogData := LogAPIParam{
+			StatusCode:    statusCode,
+			Message:       message,
+			Identifier:    identifier,
+			Timestamp:     time.Now(),
+			HTTPMethod:    httpMethod,
+			RequestHeader: headers,
+			QueryParams:   queryParams,
+			RequestBody:   requestBody,
+			ResponseCode:  statusCodeString,
+			ResponseBody:  jsonResponseBody,
+			Endpoint:      endpoint,
+			OriginalURL:   originalURL,
+			UserAgent:     userAgent,
+			ClientIP:      clientIP,
+			Username:      username,
+			StartTime:     startTime,
+			EndTime:       endTime,
 		}
 
-		logFunc(message,
-			zap.String("identifier", identifier),
-			zap.Time("timestamp", time.Now()),
-			zap.String("http_method", httpMethod),
-			zap.Any("request_header", headers),
-			zap.Any("query_params", queryParams),
-			zap.Any("request_body", requestBody),
-			zap.String("response_code", statusCodeString),
-			zap.Any("response_body", jsonResponseBody),
-			zap.String("endpoint", endpoint),
-			zap.String("original_url", originalURL),
-			zap.String("user_agent", userAgent),
-			zap.String("client_ip", clientIP),
-			zap.String("username", username),
-			zap.Time("start_time", startTime),
-			zap.Time("end_time", endTime),
-		)
+		LogAPIChannel <- apiLogData
 
 		return err
 	}
 }
 
-type LogSystemParam struct {
-	Identifier string
-	StatusCode int
-	Location   string
-	Message    string
-	StartTime  time.Time
-	EndTime    time.Time
-	Username   string
-	Err        interface{}
+func GenerateLogAPI(apiLogData LogAPIParam) {
+
+	// Log the request and response
+	logFunc := apiLogger.Info
+	if apiLogData.StatusCode >= 500 {
+		logFunc = apiLogger.Error
+	} else if apiLogData.StatusCode >= 400 {
+		logFunc = apiLogger.Warn
+	}
+
+	logFunc(apiLogData.Message,
+		zap.String("identifier", apiLogData.Identifier),
+		zap.Time("timestamp", apiLogData.Timestamp),
+		zap.String("http_method", apiLogData.HTTPMethod),
+		zap.Any("request_header", apiLogData.RequestHeader),
+		zap.Any("query_params", apiLogData.QueryParams),
+		zap.Any("request_body", apiLogData.RequestBody),
+		zap.String("response_code", apiLogData.ResponseCode),
+		zap.Any("response_body", apiLogData.ResponseBody),
+		zap.String("endpoint", apiLogData.Endpoint),
+		zap.String("original_url", apiLogData.OriginalURL),
+		zap.String("user_agent", apiLogData.UserAgent),
+		zap.String("client_ip", apiLogData.ClientIP),
+		zap.String("username", apiLogData.Username),
+		zap.Time("start_time", apiLogData.StartTime),
+		zap.Time("end_time", apiLogData.EndTime),
+	)
 }
 
-func LogSystem(logData LogSystemParam) {
+func GenerateLogSystem(logData LogSystemParam) {
 	var (
 		category         string
 		humanTime        = logData.EndTime.Format(time.RFC1123)
@@ -251,7 +299,7 @@ func LogSystem(logData LogSystemParam) {
 }
 
 // Helper function to redact sensitive fields in a map
-func redactFields(data map[string]interface{}, fields []string) {
+func RedactFields(data map[string]interface{}, fields []string) {
 	for _, field := range fields {
 		if _, ok := data[field]; ok {
 			data[field] = "[REDACTED]"
@@ -259,11 +307,11 @@ func redactFields(data map[string]interface{}, fields []string) {
 	}
 	for _, value := range data {
 		if nestedMap, ok := value.(map[string]interface{}); ok {
-			redactFields(nestedMap, fields)
+			RedactFields(nestedMap, fields)
 		} else if nestedArray, ok := value.([]interface{}); ok {
 			for _, item := range nestedArray {
 				if itemMap, ok := item.(map[string]interface{}); ok {
-					redactFields(itemMap, fields)
+					RedactFields(itemMap, fields)
 				}
 			}
 		}
