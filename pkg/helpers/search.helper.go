@@ -8,7 +8,7 @@ import (
 func Search(query *model.QueryGet, allowedFields map[string]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		searchBy := query.SearchBy
-		searchValue := query.Search
+		searchValue := "%" + query.Search + "%"
 
 		// Validate the search_by field and retrieve the corresponding database field
 		dbField, isValidSearchField := allowedFields[searchBy]
