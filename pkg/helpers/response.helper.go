@@ -60,7 +60,7 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 		username = ""
 	}
 
-	LogSystem(LogSystemParam{
+	logSysData := LogSystemParam{
 		Identifier: c.GetRespHeader(fiber.HeaderXRequestID),
 		StatusCode: res.Status,
 		Location:   res.Log.Location,
@@ -69,7 +69,9 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 		EndTime:    time.Now(),
 		Err:        res.Errors,
 		Username:   username,
-	})
+	}
+
+	LogSysChannel <- logSysData
 
 	res.Log = nil
 	return c.Status(res.Status).JSON(res)
