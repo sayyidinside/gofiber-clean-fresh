@@ -4,16 +4,37 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handlers"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes/tests"
+	v1 "github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes/v1"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
-func Setup(app *fiber.App) {
+func Setup(app *fiber.App, handler *handlers.Handlers) {
 	cfg := config.AppConfig
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString(fmt.Sprintf("App is running, with name %s", cfg.AppName))
-	})
 
-	app.Get("/panic", func(c *fiber.Ctx) error {
-		panic("This panic is caught by fiber")
+	api := app.Group("/api")
+	test := app.Group("/tests")
+
+	// Apply middleware for general API routes
+	api.Use(helmet.New())
+	api.Use(middleware.CORS())
+	api.Use(middleware.RateLimiter())
+	api.Use(middleware.Cache())
+
+	v1.RegisterRoutes(api, handler)
+	tests.SetupApiTestRoutes(test)
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		log := helpers.CreateLog(app)
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  200,
+			Success: true,
+			Message: fmt.Sprintf("App is running, with name %s", cfg.AppName),
+			Log:     &log,
+		})
 	})
 }

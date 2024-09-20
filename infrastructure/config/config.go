@@ -8,37 +8,51 @@ import (
 )
 
 type Config struct {
-	AppName          string `mapstructure:"APP_NAME"`
-	Env              string `mapstructure:"ENV"`
-	Port             string `mapstructure:"PORT"`
-	AdminPass        string `mapstructure:"ADMIN_PASS"`
-	JwtSecret        string `mapstructure:"JWT_SECRET"`
-	JwtTime          int    `mapstructure:"JWT_TIME"`
+	// General Config
+	AppName   string `mapstructure:"APP_NAME"`
+	Env       string `mapstructure:"ENV"`
+	Port      string `mapstructure:"PORT"`
+	AdminPass string `mapstructure:"ADMIN_PASS"`
+	Debug     bool   `mapstructure:"DEBUG"`
+
+	// JWT
+	JwtSecret string `mapstructure:"JWT_SECRET"`
+	JwtTime   int    `mapstructure:"JWT_TIME"`
+
+	// Cors
 	CorsMaxAge       int    `mapstructure:"CORS_MAX_AGE"`
 	CorsAllowOrigins string `mapstructure:"CORS_ALLOW_ORIGINS"`
 	CorsAllowMethods string `mapstructure:"CORS_ALLOW_METHODS"`
-	RateLimitMax     int    `mapstructure:"RATE_LIMIT_MAX"`
-	RateLimitExp     int    `mapstructure:"RATE_LIMIT_EXPIRATION"`
-	CacheExp         int    `mapstructure:"CACHE_EXPIRATION"`
-	SmtpEmail        string `mapstructure:"SMTP_EMAIL"`
-	SmtpPassword     string `mapstructure:"SMTP_PASSWORD"`
-	SmtpHost         string `mapstructure:"SMTP_HOST"`
-	SmtPort          string `mapstructure:"SMTP_PORT"`
-	ProdDbUsername   string `mapstructure:"PROD_DB_USERNAME"`
-	ProdDbPassword   string `mapstructure:"PROD_DB_PASSWORD"`
-	ProdDbName       string `mapstructure:"PROD_DB_NAME"`
-	ProdDbHost       string `mapstructure:"PROD_DB_HOST"`
-	ProdDbPort       string `mapstructure:"PROD_DB_PORT"`
-	DevDbUsername    string `mapstructure:"DEV_DB_USERNAME"`
-	DevDbPassword    string `mapstructure:"DEV_DB_PASSWORD"`
-	DevDbName        string `mapstructure:"DEV_DB_NAME"`
-	DevDbHost        string `mapstructure:"DEV_DB_HOST"`
-	DevDbPort        string `mapstructure:"DEV_DB_PORT"`
-	LocalDbUsername  string `mapstructure:"LOCAL_DB_USERNAME"`
-	LocalDbPassword  string `mapstructure:"LOCAL_DB_PASSWORD"`
-	LocalDbName      string `mapstructure:"LOCAL_DB_NAME"`
-	LocalDbHost      string `mapstructure:"LOCAL_DB_HOST"`
-	LocalDbPort      string `mapstructure:"LOCAL_DB_PORT"`
+
+	// Rate Limit
+	RateLimitMax int `mapstructure:"RATE_LIMIT_MAX"`
+	RateLimitExp int `mapstructure:"RATE_LIMIT_EXPIRATION"`
+
+	// Caching
+	CacheExp int `mapstructure:"CACHE_EXPIRATION"`
+
+	// Email
+	SmtpEmail    string `mapstructure:"SMTP_EMAIL"`
+	SmtpPassword string `mapstructure:"SMTP_PASSWORD"`
+	SmtpHost     string `mapstructure:"SMTP_HOST"`
+	SmtPort      string `mapstructure:"SMTP_PORT"`
+
+	// Database
+	ProdDbUsername  string `mapstructure:"PROD_DB_USERNAME"`
+	ProdDbPassword  string `mapstructure:"PROD_DB_PASSWORD"`
+	ProdDbName      string `mapstructure:"PROD_DB_NAME"`
+	ProdDbHost      string `mapstructure:"PROD_DB_HOST"`
+	ProdDbPort      string `mapstructure:"PROD_DB_PORT"`
+	DevDbUsername   string `mapstructure:"DEV_DB_USERNAME"`
+	DevDbPassword   string `mapstructure:"DEV_DB_PASSWORD"`
+	DevDbName       string `mapstructure:"DEV_DB_NAME"`
+	DevDbHost       string `mapstructure:"DEV_DB_HOST"`
+	DevDbPort       string `mapstructure:"DEV_DB_PORT"`
+	LocalDbUsername string `mapstructure:"LOCAL_DB_USERNAME"`
+	LocalDbPassword string `mapstructure:"LOCAL_DB_PASSWORD"`
+	LocalDbName     string `mapstructure:"LOCAL_DB_NAME"`
+	LocalDbHost     string `mapstructure:"LOCAL_DB_HOST"`
+	LocalDbPort     string `mapstructure:"LOCAL_DB_PORT"`
 }
 
 var AppConfig *Config
