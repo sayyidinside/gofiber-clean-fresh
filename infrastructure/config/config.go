@@ -13,6 +13,7 @@ type Config struct {
 	Env       string `mapstructure:"ENV"`
 	Port      string `mapstructure:"PORT"`
 	AdminPass string `mapstructure:"ADMIN_PASS"`
+	Debug     bool   `mapstructure:"DEBUG"`
 
 	// JWT
 	JwtSecret string `mapstructure:"JWT_SECRET"`
