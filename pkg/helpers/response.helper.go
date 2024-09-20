@@ -34,8 +34,6 @@ type Pagination struct {
 	TotalItems  int     `json:"total_items"`
 	TotalPages  int     `json:"total_pages"`
 	ItemPerPage int     `json:"item_per_page"`
-	FromRow     int     `json:"from_row"`
-	ToRow       int     `json:"to_row"`
 	Self        string  `json:"self"`
 	Next        *string `json:"next"`
 	Prev        *string `json:"prev"`
@@ -61,13 +59,23 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 	} else {
 		username = ""
 	}
+	// log.Println(res.Log)
+
+	// Default value if res.Log is nil
+	var location string
+	var startTime time.Time
+
+	if res.Log != nil {
+		location = res.Log.Location
+		startTime = res.Log.StartTime
+	}
 
 	logSysData := LogSystemParam{
 		Identifier: c.GetRespHeader(fiber.HeaderXRequestID),
 		StatusCode: res.Status,
-		Location:   res.Log.Location,
+		Location:   location,
 		Message:    res.Message,
-		StartTime:  res.Log.StartTime,
+		StartTime:  startTime,
 		EndTime:    time.Now(),
 		Err:        res.Errors,
 		Username:   username,
