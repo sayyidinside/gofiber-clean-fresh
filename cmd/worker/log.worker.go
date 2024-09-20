@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"log"
 	"time"
 
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
@@ -20,10 +19,8 @@ func StartLogWorker() {
 		for {
 			select {
 			case logSys := <-helpers.LogSysChannel:
-				log.Println(logSys)
 				helpers.GenerateLogSystem(logSys)
 			case logAPI := <-helpers.LogAPIChannel:
-				log.Println(logAPI)
 				helpers.GenerateLogAPI(logAPI)
 			}
 		}

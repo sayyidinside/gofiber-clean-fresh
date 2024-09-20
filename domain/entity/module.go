@@ -1,16 +1,15 @@
-package module
+package entity
 
 import (
 	"github.com/google/uuid"
-	"github.com/sayyidinside/gofiber-clean-fresh/domain/permission"
 	"gorm.io/gorm"
 )
 
 type Module struct {
-	ID          uint                    `json:"id" gorm:"primaryKey"`
-	UUID        uuid.UUID               `json:"uuid" gorm:"uniqueIndex;type:char(36)"`
-	Name        string                  `json:"name"`
-	Permissions []permission.Permission `json:"permissions" gorm:"foreignKey:ModuleID"`
+	ID          uint         `json:"id" gorm:"primaryKey"`
+	UUID        uuid.UUID    `json:"uuid" gorm:"uniqueIndex;type:char(36)"`
+	Name        string       `json:"name"`
+	Permissions []Permission `json:"permissions" gorm:"foreignKey:ModuleID"`
 	gorm.Model
 }
 
