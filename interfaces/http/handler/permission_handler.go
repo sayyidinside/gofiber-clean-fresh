@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,21 +20,26 @@ func NewPermissionHandler(service service.PermissionService) *PermissionHandler 
 }
 
 func (h *PermissionHandler) GetPermission(c *fiber.Ctx) error {
+	log := helpers.CreateLog(c)
+
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
+			Log:     &log,
 		})
 	}
 
 	response := h.service.GetByID(c.Context(), uint(id))
+	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *PermissionHandler) GetAllPermission(c *fiber.Ctx) error {
+	log := helpers.CreateLog(c)
 	query := new(model.QueryGet)
 
 	if err := c.QueryParser(query); err != nil {
@@ -43,6 +47,7 @@ func (h *PermissionHandler) GetAllPermission(c *fiber.Ctx) error {
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request query",
+			Log:     &log,
 		})
 	}
 
@@ -50,19 +55,21 @@ func (h *PermissionHandler) GetAllPermission(c *fiber.Ctx) error {
 
 	url := c.BaseURL() + c.OriginalURL()
 	response := h.service.GetAll(c.Context(), query, url)
+	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *PermissionHandler) CreatePermission(c *fiber.Ctx) error {
+	log := helpers.CreateLog(c)
 	var input model.PermissionInput
 
 	if err := c.BodyParser(&input); err != nil {
-		log.Println(err.Error())
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
+			Log:     &log,
 		})
 	}
 
@@ -80,17 +87,20 @@ func (h *PermissionHandler) CreatePermission(c *fiber.Ctx) error {
 	}
 
 	response := h.service.Create(c.Context(), &input)
+	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *PermissionHandler) UpdatePermission(c *fiber.Ctx) error {
+	log := helpers.CreateLog(c)
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
+			Log:     &log,
 		})
 	}
 
@@ -114,21 +124,25 @@ func (h *PermissionHandler) UpdatePermission(c *fiber.Ctx) error {
 	}
 
 	response := h.service.UpdateByID(c.Context(), &input, uint(id))
+	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *PermissionHandler) DeletePermission(c *fiber.Ctx) error {
+	log := helpers.CreateLog(c)
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
+			Log:     &log,
 		})
 	}
 
 	response := h.service.DeleteByID(c.Context(), uint(id))
+	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }
