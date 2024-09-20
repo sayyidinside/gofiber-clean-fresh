@@ -2,27 +2,32 @@ package bootstrap
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/sayyidinside/gofiber-clean-fresh/domain/user"
-	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handlers"
+	"github.com/sayyidinside/gofiber-clean-fresh/domain/repository"
+	"github.com/sayyidinside/gofiber-clean-fresh/domain/service"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes"
-	userHand "github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/user"
 	"gorm.io/gorm"
 )
 
 func Initialize(app *fiber.App, db *gorm.DB) {
 	// Repositories
-	userRepo := user.NewRepository(db)
+	userRepo := repository.NewUserRepository(db)
+	permissionRepo := repository.NewPermissionRepository(db)
+	moduleRepo := repository.NewModuleRepository(db)
 
 	// Service
-	userService := user.NewService(userRepo)
+	userService := service.NewUserService(userRepo)
+	permissionService := service.NewPermissionService(permissionRepo, moduleRepo)
 
 	// Handler
-	userHandler := userHand.NewHandler(userService)
+	userHandler := handler.NewUserHandler(userService)
+	permissionHandler := handler.NewPermissionHandler(permissionService)
 
 	// Setup handler to send to routes setup
-	handler := &handlers.Handlers{
-		UserManagementHandler: &handlers.UserManagementHandler{
-			UserHandler: *userHandler,
+	handler := &handler.Handlers{
+		UserManagementHandler: &handler.UserManagementHandler{
+			UserHandler:       *userHandler,
+			PermissionHandler: *permissionHandler,
 		},
 	}
 

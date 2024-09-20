@@ -1,4 +1,4 @@
-package permission
+package entity
 
 import (
 	"github.com/google/uuid"
@@ -10,6 +10,7 @@ type Permission struct {
 	UUID     uuid.UUID `json:"uuid" gorm:"uniqueIndex;type:char(36)"`
 	Name     string    `json:"name"`
 	ModuleID uint      `json:"module_id"`
+	Module   Module    `json:"module" gorm:"foreignKey:ModuleID"`
 	gorm.Model
 }
 

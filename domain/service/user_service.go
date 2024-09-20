@@ -1,26 +1,31 @@
-package user
+package service
 
 import (
+	"context"
 	"errors"
+	"log"
 
+	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
+	"github.com/sayyidinside/gofiber-clean-fresh/domain/repository"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/model"
 )
 
 type UserService interface {
-	GetUserByID(id string) (*model.UserDetail, error)
+	GetUserByID(ctx context.Context, id string) (*model.UserDetail, error)
+	Create()
 }
 
-type service struct {
-	repository UserRepository
+type userService struct {
+	repository repository.UserRepository
 }
 
-func NewService(repository UserRepository) UserService {
-	return &service{
+func NewUserService(repository repository.UserRepository) UserService {
+	return &userService{
 		repository: repository,
 	}
 }
 
-func (s *service) GetUserByID(id string) (*model.UserDetail, error) {
+func (s *userService) GetUserByID(ctx context.Context, id string) (*model.UserDetail, error) {
 	user, err := s.repository.FindByID(id)
 	if user.ID == 0 {
 		return nil, errors.New("not found")
@@ -32,7 +37,11 @@ func (s *service) GetUserByID(id string) (*model.UserDetail, error) {
 	return userModel, err
 }
 
-func (s *service) entityToDetailModel(user *User) *model.UserDetail {
+func (s *userService) Create() {
+	log.Println("test")
+}
+
+func (s *userService) entityToDetailModel(user *entity.User) *model.UserDetail {
 	return &model.UserDetail{
 		ID:          user.ID,
 		UUID:        user.UUID,
