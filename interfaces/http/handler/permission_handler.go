@@ -9,17 +9,25 @@ import (
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
-type PermissionHandler struct {
+type PermissionHandler interface {
+	GetPermission(c *fiber.Ctx) error
+	GetAllPermission(c *fiber.Ctx) error
+	CreatePermission(c *fiber.Ctx) error
+	UpdatePermission(c *fiber.Ctx) error
+	DeletePermission(c *fiber.Ctx) error
+}
+
+type permissionHandler struct {
 	service service.PermissionService
 }
 
-func NewPermissionHandler(service service.PermissionService) *PermissionHandler {
-	return &PermissionHandler{
+func NewPermissionHandler(service service.PermissionService) PermissionHandler {
+	return &permissionHandler{
 		service: service,
 	}
 }
 
-func (h *PermissionHandler) GetPermission(c *fiber.Ctx) error {
+func (h *permissionHandler) GetPermission(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
@@ -38,7 +46,7 @@ func (h *PermissionHandler) GetPermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *PermissionHandler) GetAllPermission(c *fiber.Ctx) error {
+func (h *permissionHandler) GetAllPermission(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 	query := new(model.QueryGet)
 
@@ -60,7 +68,7 @@ func (h *PermissionHandler) GetAllPermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *PermissionHandler) CreatePermission(c *fiber.Ctx) error {
+func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 	var input model.PermissionInput
 
@@ -93,7 +101,7 @@ func (h *PermissionHandler) CreatePermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *PermissionHandler) UpdatePermission(c *fiber.Ctx) error {
+func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
@@ -136,7 +144,7 @@ func (h *PermissionHandler) UpdatePermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *PermissionHandler) DeletePermission(c *fiber.Ctx) error {
+func (h *permissionHandler) DeletePermission(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {

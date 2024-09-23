@@ -29,7 +29,7 @@ func Initialize(app *fiber.App, db *gorm.DB) {
 	handler := &handler.Handlers{
 		UserManagementHandler: &handler.UserManagementHandler{
 			UserHandler:       *userHandler,
-			PermissionHandler: *permissionHandler,
+			PermissionHandler: permissionHandler,
 			ModuleHandler:     moduleHandler,
 		},
 	}
