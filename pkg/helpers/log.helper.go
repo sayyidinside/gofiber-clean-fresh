@@ -170,16 +170,26 @@ func APILogger(logger *zap.Logger) fiber.Handler {
 		// Capture response
 		statusCode := c.Response().StatusCode()
 		responseBody := c.Response().Body()
+		contentType = c.GetRespHeader("Content-Type") // Re-fetch content type for response
 		endTime := time.Now()
 
-		// Process response body for logging
 		var jsonResponseBody map[string]interface{}
-		if err := json.Unmarshal(responseBody, &jsonResponseBody); err != nil {
+		if isBinaryContent(contentType) {
+			// If the response is binary content (e.g. PDF, image), do not log the raw body, log metadata instead
 			jsonResponseBody = map[string]interface{}{
-				"raw": string(responseBody),
+				"content_type": contentType,
+				"size":         len(responseBody),
+				"message":      "Binary content returned, body is not logged.",
 			}
 		} else {
-			RedactFields(jsonResponseBody, []string{"key", "token", "password", "re_password", "old_password", "raw"})
+			// Process non-binary response body for logging
+			if err := json.Unmarshal(responseBody, &jsonResponseBody); err != nil {
+				jsonResponseBody = map[string]interface{}{
+					"raw": string(responseBody),
+				}
+			} else {
+				RedactFields(jsonResponseBody, []string{"key", "token", "password", "re_password", "old_password", "raw"})
+			}
 		}
 
 		// Redact Authorization header
@@ -236,6 +246,11 @@ func APILogger(logger *zap.Logger) fiber.Handler {
 
 		return err
 	}
+}
+
+// Helper function to determine if the content type is binary
+func isBinaryContent(contentType string) bool {
+	return strings.HasPrefix(contentType, "application/") || strings.HasPrefix(contentType, "image/")
 }
 
 func GenerateLogAPI(apiLogData LogAPIParam) {
