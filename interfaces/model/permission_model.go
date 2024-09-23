@@ -50,7 +50,7 @@ func PermissionToListModel(permission *entity.Permission) *PermissionList {
 		ID:       permission.ID,
 		UUID:     permission.UUID,
 		Name:     permission.Name,
-		ModuleID: permission.Module.ID,
+		ModuleID: permission.ModuleID,
 		Module:   permission.Module.Name,
 	}
 }

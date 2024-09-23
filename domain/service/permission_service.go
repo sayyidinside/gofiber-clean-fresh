@@ -175,7 +175,7 @@ func (s *permissionService) DeleteByID(ctx context.Context, id uint) helpers.Bas
 		return helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
-			Message: "Error deleting	 data",
+			Message: "Error deleting data",
 		}
 	}
 
