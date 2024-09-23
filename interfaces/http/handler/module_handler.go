@@ -9,25 +9,25 @@ import (
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
-type PermissionHandler interface {
-	GetPermission(c *fiber.Ctx) error
-	GetAllPermission(c *fiber.Ctx) error
-	CreatePermission(c *fiber.Ctx) error
-	UpdatePermission(c *fiber.Ctx) error
-	DeletePermission(c *fiber.Ctx) error
+type ModuleHandler interface {
+	GetModule(c *fiber.Ctx) error
+	GetAllModule(c *fiber.Ctx) error
+	CreateModule(c *fiber.Ctx) error
+	UpdateModule(c *fiber.Ctx) error
+	DeleteModule(c *fiber.Ctx) error
 }
 
-type permissionHandler struct {
-	service service.PermissionService
+type moduleHandler struct {
+	service service.ModuleService
 }
 
-func NewPermissionHandler(service service.PermissionService) PermissionHandler {
-	return &permissionHandler{
+func NewModuleHandler(service service.ModuleService) ModuleHandler {
+	return &moduleHandler{
 		service: service,
 	}
 }
 
-func (h *permissionHandler) GetPermission(c *fiber.Ctx) error {
+func (h *moduleHandler) GetModule(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
@@ -46,10 +46,10 @@ func (h *permissionHandler) GetPermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *permissionHandler) GetAllPermission(c *fiber.Ctx) error {
+func (h *moduleHandler) GetAllModule(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
-	query := new(model.QueryGet)
 
+	query := new(model.QueryGet)
 	if err := c.QueryParser(query); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
@@ -68,9 +68,9 @@ func (h *permissionHandler) GetAllPermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
+func (h *moduleHandler) CreateModule(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
-	var input model.PermissionInput
+	var input model.ModuleInput
 
 	if err := c.BodyParser(&input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -81,16 +81,15 @@ func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizePermissionInput(&input)
+	model.SanitizeModuleInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
-		errorData := interface{}(err)
-
+		iError := interface{}(err)
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
-			Errors:  &errorData,
+			Errors:  &iError,
 			Log:     &log,
 		})
 	}
@@ -101,7 +100,7 @@ func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
+func (h *moduleHandler) UpdateModule(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
@@ -113,7 +112,7 @@ func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 		})
 	}
 
-	var input model.PermissionInput
+	var input model.ModuleInput
 
 	if err := c.BodyParser(&input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -124,16 +123,16 @@ func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizePermissionInput(&input)
+	model.SanitizeModuleInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
-		errorData := interface{}(err)
+		iError := interface{}(err)
 
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
-			Errors:  &errorData,
+			Errors:  &iError,
 			Log:     &log,
 		})
 	}
@@ -144,7 +143,7 @@ func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *permissionHandler) DeletePermission(c *fiber.Ctx) error {
+func (h *moduleHandler) DeleteModule(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
