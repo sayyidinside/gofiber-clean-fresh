@@ -250,7 +250,7 @@ func APILogger(logger *zap.Logger) fiber.Handler {
 
 // Helper function to determine if the content type is binary
 func isBinaryContent(contentType string) bool {
-	return strings.HasPrefix(contentType, "application/") || strings.HasPrefix(contentType, "image/")
+	return !strings.HasPrefix(contentType, "application/json") && !strings.HasPrefix(contentType, "text/plain")
 }
 
 func GenerateLogAPI(apiLogData LogAPIParam) {
