@@ -10,4 +10,5 @@ func RegisterRoutes(route fiber.Router, handler *handler.UserManagementHandler) 
 
 	RegisterUserRoutes(user, &handler.UserHandler)
 	RegisterPermissionRoutes(user, &handler.PermissionHandler)
+	RegisterModuleRoutes(user, handler.ModuleHandler)
 }
