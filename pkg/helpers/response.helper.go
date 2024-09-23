@@ -84,5 +84,8 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 	LogSysChannel <- logSysData
 
 	res.Log = nil
+	if res.Status != fiber.StatusBadRequest {
+		res.Errors = nil
+	}
 	return c.Status(res.Status).JSON(res)
 }
