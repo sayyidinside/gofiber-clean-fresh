@@ -61,13 +61,23 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 	} else {
 		username = ""
 	}
+	// log.Println(res.Log)
+
+	// Default value if res.Log is nil
+	var location string
+	var startTime time.Time
+
+	if res.Log != nil {
+		location = res.Log.Location
+		startTime = res.Log.StartTime
+	}
 
 	logSysData := LogSystemParam{
 		Identifier: c.GetRespHeader(fiber.HeaderXRequestID),
 		StatusCode: res.Status,
-		Location:   res.Log.Location,
+		Location:   location,
 		Message:    res.Message,
-		StartTime:  res.Log.StartTime,
+		StartTime:  startTime,
 		EndTime:    time.Now(),
 		Err:        res.Errors,
 		Username:   username,
@@ -76,5 +86,8 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 	LogSysChannel <- logSysData
 
 	res.Log = nil
+	if res.Status != fiber.StatusBadRequest {
+		res.Errors = nil
+	}
 	return c.Status(res.Status).JSON(res)
 }
