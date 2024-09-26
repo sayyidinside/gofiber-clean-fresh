@@ -11,6 +11,7 @@ import (
 	"github.com/sayyidinside/gofiber-clean-fresh/cmd/worker"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
@@ -22,6 +23,8 @@ func main() {
 	worker.StartLogWorker()
 
 	helpers.InitLogger()
+
+	middleware.InitWhitelistIP()
 
 	app := fiber.New(fiber.Config{
 		AppName:                 config.AppConfig.AppName,
