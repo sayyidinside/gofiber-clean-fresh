@@ -31,6 +31,9 @@ type Config struct {
 	// Caching
 	CacheExp int `mapstructure:"CACHE_EXPIRATION"`
 
+	// Whitelist IP
+	AllowedIPs string `mapstructure:"ALLOWED_IP"`
+
 	// Email
 	SmtpEmail    string `mapstructure:"SMTP_EMAIL"`
 	SmtpPassword string `mapstructure:"SMTP_PASSWORD"`
