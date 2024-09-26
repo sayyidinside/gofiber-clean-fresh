@@ -31,6 +31,7 @@ func ErrorHelper(c *fiber.Ctx) error {
 			Status:  500,
 			Success: false,
 			Message: "Internal Server Error",
+			Errors:  err,
 			Log:     &logData,
 		})
 	}
@@ -50,6 +51,7 @@ func RecoverWithLog() fiber.Handler {
 					Status:  500,
 					Success: false,
 					Message: "Internal Server Error",
+					Errors:  r,
 					Log:     &logData,
 				})
 			}
