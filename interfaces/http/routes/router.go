@@ -22,6 +22,7 @@ func Setup(app *fiber.App, handlers *handler.Handlers) {
 	// Apply middleware for general API routes
 	api.Use(helmet.New())
 	api.Use(middleware.CORS())
+	api.Use(middleware.WhitelistIP())
 	api.Use(middleware.RateLimiter())
 	api.Use(middleware.Cache())
 
