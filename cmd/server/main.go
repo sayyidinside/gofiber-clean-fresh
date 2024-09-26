@@ -8,23 +8,13 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/sayyidinside/gofiber-clean-fresh/cmd/bootstrap"
-	"github.com/sayyidinside/gofiber-clean-fresh/cmd/worker"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
-	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
 func main() {
-	if err := config.LoadConfig(); err != nil {
-		log.Println(err.Error())
-	}
-
-	worker.StartLogWorker()
-
-	helpers.InitLogger()
-
-	middleware.InitWhitelistIP()
+	bootstrap.InitApp()
 
 	app := fiber.New(fiber.Config{
 		AppName:                 config.AppConfig.AppName,
