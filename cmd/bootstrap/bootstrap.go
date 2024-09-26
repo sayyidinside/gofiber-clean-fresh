@@ -1,11 +1,17 @@
 package bootstrap
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/sayyidinside/gofiber-clean-fresh/cmd/worker"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/repository"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/service"
+	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/routes"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 	"gorm.io/gorm"
 )
 
@@ -35,4 +41,17 @@ func Initialize(app *fiber.App, db *gorm.DB) {
 	}
 
 	routes.Setup(app, handler)
+}
+
+func InitApp() {
+	if err := config.LoadConfig(); err != nil {
+		log.Println(err.Error())
+	}
+
+	worker.StartLogWorker()
+
+	helpers.InitLogger()
+
+	middleware.InitWhitelistIP()
+
 }
