@@ -1,27 +1,42 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/service"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
-type UserHandler struct {
+type UserHandler interface {
+	GetUser(c *fiber.Ctx) error
+}
+
+type userHandler struct {
 	service service.UserService
 }
 
-func NewUserHandler(service service.UserService) *UserHandler {
-	return &UserHandler{
+func NewUserHandler(service service.UserService) UserHandler {
+	return &userHandler{
 		service: service,
 	}
 }
 
-func (h *UserHandler) GetUser(c *fiber.Ctx) error {
-	id := c.Params("id")
+func (h *userHandler) GetUser(c *fiber.Ctx) error {
+	logData := helpers.CreateLog(c)
 
-	user, err := h.service.GetUserByID(c.Context(), id)
-
+	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid ID format",
+			Log:     &logData,
+		})
 	}
-	return c.JSON(user)
+
+	response := h.service.GetUserByID(c.Context(), uint(id))
+	response.Log = &logData
+
+	return helpers.ResponseFormatter(c, response)
 }

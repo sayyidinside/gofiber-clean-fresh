@@ -2,16 +2,17 @@ package service
 
 import (
 	"context"
-	"errors"
 	"log"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/repository"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/model"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
 type UserService interface {
-	GetUserByID(ctx context.Context, id string) (*model.UserDetail, error)
+	GetUserByID(ctx context.Context, id uint) helpers.BaseResponse
 	Create()
 }
 
@@ -25,16 +26,26 @@ func NewUserService(repository repository.UserRepository) UserService {
 	}
 }
 
-func (s *userService) GetUserByID(ctx context.Context, id string) (*model.UserDetail, error) {
+func (s *userService) GetUserByID(ctx context.Context, id uint) helpers.BaseResponse {
 	user, err := s.repository.FindByID(id)
-	if user.ID == 0 {
-		return nil, errors.New("not found")
+	if user == nil || err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusNotFound,
+			Success: false,
+			Message: "User Not Found",
+		}
 	}
 
 	// convert entity to model data
 	userModel := s.entityToDetailModel(user)
+	iUserModel := interface{}(userModel)
 
-	return userModel, err
+	return helpers.BaseResponse{
+		Status:  fiber.StatusOK,
+		Success: true,
+		Message: "User data found",
+		Data:    &iUserModel,
+	}
 }
 
 func (s *userService) Create() {

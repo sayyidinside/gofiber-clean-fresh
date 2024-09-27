@@ -6,7 +6,7 @@ import (
 )
 
 type UserRepository interface {
-	FindByID(id string) (*entity.User, error)
+	FindByID(id uint) (*entity.User, error)
 	// Create(*User) error
 }
 
@@ -18,7 +18,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{DB: db}
 }
 
-func (r *userRepository) FindByID(id string) (*entity.User, error) {
+func (r *userRepository) FindByID(id uint) (*entity.User, error) {
 	var user entity.User
 	if err := r.DB.Limit(1).Where("id = ?", id).
 		Preload("Role", func(db *gorm.DB) *gorm.DB {

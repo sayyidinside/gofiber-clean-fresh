@@ -5,7 +5,7 @@ import (
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
 )
 
-func RegisterUserRoutes(route fiber.Router, handler *handler.UserHandler) {
+func RegisterUserRoutes(route fiber.Router, handler handler.UserHandler) {
 	user := route.Group("/informations")
 
 	user.Get("/:id", handler.GetUser)

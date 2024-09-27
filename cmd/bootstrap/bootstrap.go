@@ -34,7 +34,7 @@ func Initialize(app *fiber.App, db *gorm.DB) {
 	// Setup handler to send to routes setup
 	handler := &handler.Handlers{
 		UserManagementHandler: &handler.UserManagementHandler{
-			UserHandler:       *userHandler,
+			UserHandler:       userHandler,
 			PermissionHandler: permissionHandler,
 			ModuleHandler:     moduleHandler,
 		},
