@@ -9,4 +9,5 @@ func RegisterUserRoutes(route fiber.Router, handler handler.UserHandler) {
 	user := route.Group("/informations")
 
 	user.Get("/:id", handler.GetUser)
+	user.Get("/", handler.GetAllUser)
 }

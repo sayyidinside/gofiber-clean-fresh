@@ -5,14 +5,16 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
+	"github.com/google/uuid"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/repository"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/model"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
 type UserService interface {
-	GetUserByID(ctx context.Context, id uint) helpers.BaseResponse
+	GetByID(ctx context.Context, id uint) helpers.BaseResponse
+	GetByUUID(ctx context.Context, uuid uuid.UUID) helpers.BaseResponse
+	GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse
 	Create()
 }
 
@@ -26,8 +28,8 @@ func NewUserService(repository repository.UserRepository) UserService {
 	}
 }
 
-func (s *userService) GetUserByID(ctx context.Context, id uint) helpers.BaseResponse {
-	user, err := s.repository.FindByID(id)
+func (s *userService) GetByID(ctx context.Context, id uint) helpers.BaseResponse {
+	user, err := s.repository.FindByID(ctx, id)
 	if user == nil || err != nil {
 		return helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
@@ -37,7 +39,7 @@ func (s *userService) GetUserByID(ctx context.Context, id uint) helpers.BaseResp
 	}
 
 	// convert entity to model data
-	userModel := s.entityToDetailModel(user)
+	userModel := model.UserToDetailModel(user)
 	iUserModel := interface{}(userModel)
 
 	return helpers.BaseResponse{
@@ -48,21 +50,54 @@ func (s *userService) GetUserByID(ctx context.Context, id uint) helpers.BaseResp
 	}
 }
 
-func (s *userService) Create() {
-	log.Println("test")
+func (s *userService) GetByUUID(ctx context.Context, uuid uuid.UUID) helpers.BaseResponse {
+	user, err := s.repository.FindByUUID(ctx, uuid)
+	if user == nil || err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusNotFound,
+			Success: false,
+			Message: "User data not found",
+		}
+	}
+
+	userModel := model.UserToDetailModel(user)
+	iUser := interface{}(userModel)
+	return helpers.BaseResponse{
+		Status:  fiber.StatusOK,
+		Success: true,
+		Message: "User data found",
+		Data:    &iUser,
+	}
 }
 
-func (s *userService) entityToDetailModel(user *entity.User) *model.UserDetail {
-	return &model.UserDetail{
-		ID:          user.ID,
-		UUID:        user.UUID,
-		RoleID:      user.RoleID,
-		Role:        user.Role.Name,
-		Name:        user.Name,
-		Username:    user.Username,
-		Email:       user.Email,
-		ValidatedAt: user.ValidatedAt,
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
+func (s *userService) GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse {
+	users, err := s.repository.FindAll(ctx, query)
+	if users == nil || err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusOK,
+			Success: false,
+			Message: "User not found",
+		}
 	}
+
+	userModels := model.UserToListModel(users)
+
+	data := interface{}(userModels)
+
+	totalData := s.repository.Count(ctx, query)
+	pagination := helpers.GeneratePaginationMetadata(query, url, totalData)
+
+	return helpers.BaseResponse{
+		Status:  fiber.StatusOK,
+		Success: true,
+		Message: "User data found",
+		Data:    &data,
+		Meta: &helpers.Meta{
+			Pagination: pagination,
+		},
+	}
+}
+
+func (s *userService) Create() {
+	log.Println("test")
 }
