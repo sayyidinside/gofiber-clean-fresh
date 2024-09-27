@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,7 +21,6 @@ func InitWhitelistIP() {
 	for _, ip := range allowedIPs {
 		allowedIPSet[ip] = struct{}{}
 	}
-	log.Println(allowedIPSet)
 
 	// Add localhost to the allowed IPs
 	allowedIPSet["127.0.0.1"] = struct{}{}
@@ -37,7 +35,6 @@ func WhitelistIP() fiber.Handler {
 		}
 
 		clientIP := c.IP()
-		log.Println(clientIP)
 
 		// Cek apakah IP ada dalam set allowedIPSet
 		if _, ok := allowedIPSet[clientIP]; ok {

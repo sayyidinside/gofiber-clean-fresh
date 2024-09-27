@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -73,7 +72,7 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 		startTime = res.Log.StartTime
 	}
 
-	log.Printf("Unhandled error in Response Formatter: %v", res.Errors)
+	// log.Printf("Unhandled error in Response Formatter: %v", res.Errors)
 
 	logSysData := LogSystemParam{
 		Identifier: c.GetRespHeader(fiber.HeaderXRequestID),
