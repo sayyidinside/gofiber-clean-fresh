@@ -17,6 +17,7 @@ type UserService interface {
 	GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse
 	Create(ctx context.Context, input *model.UserInput) helpers.BaseResponse
 	UpdateByID(ctx context.Context, input *model.UserUpdateInput, id uint) helpers.BaseResponse
+	ChangePassByID(ctx context.Context, input *model.ChangePasswordInput, id uint) helpers.BaseResponse
 }
 
 type userService struct {
@@ -151,7 +152,7 @@ func (s *userService) UpdateByID(ctx context.Context, input *model.UserUpdateInp
 		return helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
-			Message: "Error passing to model",
+			Message: "Error parsing to model",
 		}
 	}
 
@@ -179,6 +180,41 @@ func (s *userService) UpdateByID(ctx context.Context, input *model.UserUpdateInp
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User successfully updated",
+	}
+}
+
+func (s *userService) ChangePassByID(ctx context.Context, input *model.ChangePasswordInput, id uint) helpers.BaseResponse {
+	if user, err := s.repository.FindByID(ctx, id); user == nil || err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusNotFound,
+			Success: false,
+			Message: "User not found",
+		}
+	}
+
+	userEntity := model.ChangePasswordToEntity(input)
+	if userEntity == nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusInternalServerError,
+			Success: false,
+			Message: "Error parsing to model",
+		}
+	}
+
+	userEntity.ID = id
+	if err := s.repository.Update(ctx, userEntity); err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusInternalServerError,
+			Success: false,
+			Message: "Error updating data",
+			Errors:  err,
+		}
+	}
+
+	return helpers.BaseResponse{
+		Status:  fiber.StatusOK,
+		Success: true,
+		Message: "User password successfully updated",
 	}
 }
 

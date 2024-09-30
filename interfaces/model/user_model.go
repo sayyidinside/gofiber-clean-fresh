@@ -53,6 +53,11 @@ type (
 		Email    string `json:"email" form:"email" validate:"required"`
 		RoleID   uint   `json:"role_id" form:"role_id" validate:"required"`
 	}
+
+	ChangePasswordInput struct {
+		Password   string `json:"password" form:"password" validate:"required"`
+		RePassword string `json:"repassword" form:"repassword" validate:"required,eqfield=Password"`
+	}
 )
 
 func UserToDetailModel(user *entity.User) *UserDetail {
@@ -114,6 +119,13 @@ func UserUpdateInputToEntity(input *UserUpdateInput) *entity.User {
 	}
 }
 
+func ChangePasswordToEntity(input *ChangePasswordInput) *entity.User {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	return &entity.User{
+		Password: string(hashedPassword),
+	}
+}
+
 func SanitizeUserInput(input *UserInput) {
 	sanitizer := bluemonday.StrictPolicy()
 
@@ -130,4 +142,11 @@ func SanitizeUserUpdateInput(input *UserUpdateInput) {
 	input.Name = sanitizer.Sanitize(input.Name)
 	input.Username = sanitizer.Sanitize(input.Username)
 	input.Email = sanitizer.Sanitize(input.Email)
+}
+
+func SanitizeChangePasswordInput(input *ChangePasswordInput) {
+	sanitizer := bluemonday.StrictPolicy()
+
+	input.Password = sanitizer.Sanitize(input.Password)
+	input.RePassword = sanitizer.Sanitize(input.RePassword)
 }
