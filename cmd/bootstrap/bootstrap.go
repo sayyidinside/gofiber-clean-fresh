@@ -17,12 +17,14 @@ import (
 
 func Initialize(app *fiber.App, db *gorm.DB) {
 	// Repositories
+	roleRepo := repository.NewRoleRepository(db)
+
 	userRepo := repository.NewUserRepository(db)
 	permissionRepo := repository.NewPermissionRepository(db)
 	moduleRepo := repository.NewModuleRepository(db)
 
 	// Service
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, roleRepo)
 	permissionService := service.NewPermissionService(permissionRepo, moduleRepo)
 	moduleService := service.NewModuleService(moduleRepo)
 
@@ -34,7 +36,7 @@ func Initialize(app *fiber.App, db *gorm.DB) {
 	// Setup handler to send to routes setup
 	handler := &handler.Handlers{
 		UserManagementHandler: &handler.UserManagementHandler{
-			UserHandler:       *userHandler,
+			UserHandler:       userHandler,
 			PermissionHandler: permissionHandler,
 			ModuleHandler:     moduleHandler,
 		},
