@@ -10,4 +10,5 @@ func RegisterUserRoutes(route fiber.Router, handler handler.UserHandler) {
 
 	user.Get("/:id", handler.GetUser)
 	user.Get("/", handler.GetAllUser)
+	user.Post("/", handler.CreateUser)
 }

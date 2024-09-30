@@ -12,6 +12,7 @@ import (
 type UserHandler interface {
 	GetUser(c *fiber.Ctx) error
 	GetAllUser(c *fiber.Ctx) error
+	CreateUser(c *fiber.Ctx) error
 }
 
 type userHandler struct {
@@ -60,6 +61,37 @@ func (h *userHandler) GetAllUser(c *fiber.Ctx) error {
 
 	url := c.BaseURL() + c.OriginalURL()
 	response := h.service.GetAll(c.Context(), query, url)
+	response.Log = &logData
+
+	return helpers.ResponseFormatter(c, response)
+}
+
+func (h *userHandler) CreateUser(c *fiber.Ctx) error {
+	logData := helpers.CreateLog(c)
+	var input model.UserInput
+
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Log:     &logData,
+		})
+	}
+
+	model.SanitizeUserInput(&input)
+
+	if err := helpers.ValidateInput(input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Errors:  err,
+			Log:     &logData,
+		})
+	}
+
+	response := h.service.Create(c.Context(), &input)
 	response.Log = &logData
 
 	return helpers.ResponseFormatter(c, response)

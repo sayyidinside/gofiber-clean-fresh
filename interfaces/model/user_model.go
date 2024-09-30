@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type (
@@ -34,6 +36,15 @@ type (
 		Username string    `json:"username"`
 		Email    string    `json:"email"`
 		Role     string    `json:"role"`
+	}
+
+	UserInput struct {
+		Name       string `json:"name" form:"name" validate:"required"`
+		Username   string `json:"username" form:"username" validate:"required"`
+		Email      string `json:"email" form:"email" validate:"required"`
+		Password   string `json:"password" form:"password" validate:"required"`
+		RePassword string `json:"repassword" form:"repassword" validate:"required,eqfield=Password"`
+		RoleID     uint   `json:"role_id" form:"role_id" validate:"required"`
 	}
 )
 
@@ -71,4 +82,27 @@ func UserToListModel(users *[]entity.User) *[]UserList {
 	}
 
 	return &listUsers
+}
+
+func UserInputToEntity(userInput *UserInput) *entity.User {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(userInput.Password), bcrypt.DefaultCost)
+
+	return &entity.User{
+		Name:        userInput.Name,
+		Username:    userInput.Username,
+		Email:       userInput.Email,
+		Password:    string(hashedPassword),
+		RoleID:      userInput.RoleID,
+		ValidatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+	}
+}
+
+func SanitizeUserInput(input *UserInput) {
+	sanitizer := bluemonday.StrictPolicy()
+
+	input.Name = sanitizer.Sanitize(input.Name)
+	input.Username = sanitizer.Sanitize(input.Username)
+	input.Email = sanitizer.Sanitize(input.Email)
+	input.Password = sanitizer.Sanitize(input.Password)
+	input.RePassword = sanitizer.Sanitize(input.RePassword)
 }

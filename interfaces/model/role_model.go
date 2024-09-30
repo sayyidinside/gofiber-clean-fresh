@@ -28,16 +28,16 @@ type (
 	}
 )
 
-func RoleToDetailModel(role *entity.Role) *RoleDetail {
-	permissions := PermissionToListModels(&role.Permissions)
+// func RoleToDetailModel(role *entity.Role) *RoleDetail {
+// 	permissions := PermissionToListModels(&role.Permissions)
 
-	return &RoleDetail{
-		ID:          role.ID,
-		UUID:        role.UUID,
-		Name:        role.Name,
-		Permissions: permissions,
-	}
-}
+// 	return &RoleDetail{
+// 		ID:          role.ID,
+// 		UUID:        role.UUID,
+// 		Name:        role.Name,
+// 		Permissions: permissions,
+// 	}
+// }
 
 func RoleToListModel(role *entity.Role) *RoleList {
 	return &RoleList{

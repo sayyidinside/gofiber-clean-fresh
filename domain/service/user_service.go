@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/repository"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/model"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
@@ -15,16 +15,18 @@ type UserService interface {
 	GetByID(ctx context.Context, id uint) helpers.BaseResponse
 	GetByUUID(ctx context.Context, uuid uuid.UUID) helpers.BaseResponse
 	GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse
-	Create()
+	Create(ctx context.Context, input *model.UserInput) helpers.BaseResponse
 }
 
 type userService struct {
-	repository repository.UserRepository
+	repository     repository.UserRepository
+	roleRepository repository.RoleRepository
 }
 
-func NewUserService(repository repository.UserRepository) UserService {
+func NewUserService(repository repository.UserRepository, roleRepository repository.RoleRepository) UserService {
 	return &userService{
-		repository: repository,
+		repository:     repository,
+		roleRepository: roleRepository,
 	}
 }
 
@@ -98,6 +100,75 @@ func (s *userService) GetAll(ctx context.Context, query *model.QueryGet, url str
 	}
 }
 
-func (s *userService) Create() {
-	log.Println("test")
+func (s *userService) Create(ctx context.Context, input *model.UserInput) helpers.BaseResponse {
+	userEntity := model.UserInputToEntity(input)
+
+	if userEntity == nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusInternalServerError,
+			Success: false,
+			Message: "Error parsing model",
+		}
+	}
+
+	if err := s.ValidateEntityInput(ctx, userEntity); err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "invalid or malformed request body",
+			Errors:  err,
+		}
+	}
+
+	if err := s.repository.Insert(ctx, userEntity); err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusInternalServerError,
+			Success: false,
+			Message: "Error creating data",
+		}
+	}
+
+	return helpers.BaseResponse{
+		Status:  fiber.StatusCreated,
+		Success: true,
+		Message: "User successfully created",
+	}
+
+}
+
+func (s *userService) ValidateEntityInput(ctx context.Context, user *entity.User) interface{} {
+	errors := []helpers.ValidationError{}
+
+	if role, err := s.roleRepository.FindByID(ctx, user.RoleID); role == nil || err != nil {
+		errors = append(errors, helpers.ValidationError{
+			Field: "role_id",
+			Tag:   "not_found",
+		})
+	}
+
+	if exist := s.repository.NameExist(ctx, user); exist {
+		errors = append(errors, helpers.ValidationError{
+			Field: "name",
+			Tag:   "duplicate",
+		})
+	}
+
+	if exist := s.repository.EmailExist(ctx, user); exist {
+		errors = append(errors, helpers.ValidationError{
+			Field: "email",
+			Tag:   "duplicate",
+		})
+	}
+
+	if exist := s.repository.UsernameExist(ctx, user); exist {
+		errors = append(errors, helpers.ValidationError{
+			Field: "username",
+			Tag:   "duplicate",
+		})
+	}
+
+	if len(errors) > 0 {
+		return errors
+	}
+	return nil
 }
