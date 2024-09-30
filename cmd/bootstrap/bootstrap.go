@@ -17,8 +17,6 @@ import (
 
 func Initialize(app *fiber.App, db *gorm.DB) {
 	// Repositories
-	roleRepo := repository.NewRoleRepository(db)
-
 	userRepo := repository.NewUserRepository(db)
 	permissionRepo := repository.NewPermissionRepository(db)
 	moduleRepo := repository.NewModuleRepository(db)

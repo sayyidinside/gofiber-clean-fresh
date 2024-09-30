@@ -8,9 +8,12 @@ import (
 func RegisterRoleRoutes(route fiber.Router, handler handler.RoleHandler) {
 	user := route.Group("/roles")
 
-	user.Get("/", handler.GetAllRole)
 	user.Get("/:id", handler.GetRole)
+	user.Get("/", handler.GetAllRole)
+
 	user.Post("", handler.CreateRole)
+
 	user.Put("/:id", handler.UpdateRole)
+
 	user.Delete("/:id", handler.DeleteRole)
 }
