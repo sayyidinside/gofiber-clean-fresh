@@ -14,6 +14,7 @@ type PermissionRepository interface {
 	FindByID(ctx context.Context, id uint) (*entity.Permission, error)
 	FindByUUID(ctx context.Context, uuid uuid.UUID) (*entity.Permission, error)
 	FindAll(ctx context.Context, query *model.QueryGet) (*[]entity.Permission, error)
+	FindInID(ctx context.Context, ids []uint) (*[]entity.Permission, error)
 	Insert(ctx context.Context, permission *entity.Permission) error
 	Update(ctx context.Context, permission *entity.Permission) error
 	Delete(ctx context.Context, permission *entity.Permission) error
@@ -83,6 +84,16 @@ func (r *permissionRepository) FindAll(ctx context.Context, query *model.QueryGe
 	)
 
 	if err := tx.Find(&permissions).Error; err != nil {
+		return nil, err
+	}
+
+	return &permissions, nil
+}
+
+func (r *permissionRepository) FindInID(ctx context.Context, ids []uint) (*[]entity.Permission, error) {
+	var permissions []entity.Permission
+
+	if err := r.DB.WithContext(ctx).Model(&entity.Permission{}).Select("id", "name", "module_id").Where("id IN ?", ids).Find(&permissions).Error; err != nil {
 		return nil, err
 	}
 

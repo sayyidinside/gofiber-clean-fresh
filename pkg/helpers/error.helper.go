@@ -26,11 +26,14 @@ func ErrorHelper(c *fiber.Ctx) error {
 		// Log the error for debugging
 		log.Printf("Unhandled error: %v", err)
 
+		iError := interface{}(err)
+
 		// Return a 500 Internal Server Error response
 		return ResponseFormatter(c, BaseResponse{
 			Status:  500,
 			Success: false,
 			Message: "Internal Server Error",
+			Errors:  &iError,
 			Log:     &logData,
 		})
 	}
@@ -50,6 +53,7 @@ func RecoverWithLog() fiber.Handler {
 					Status:  500,
 					Success: false,
 					Message: "Internal Server Error",
+					Errors:  &r,
 					Log:     &logData,
 				})
 			}
