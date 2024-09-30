@@ -16,6 +16,7 @@ type UserService interface {
 	GetByUUID(ctx context.Context, uuid uuid.UUID) helpers.BaseResponse
 	GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse
 	Create(ctx context.Context, input *model.UserInput) helpers.BaseResponse
+	UpdateByID(ctx context.Context, input *model.UserUpdateInput, id uint) helpers.BaseResponse
 }
 
 type userService struct {
@@ -134,6 +135,51 @@ func (s *userService) Create(ctx context.Context, input *model.UserInput) helper
 		Message: "User successfully created",
 	}
 
+}
+
+func (s *userService) UpdateByID(ctx context.Context, input *model.UserUpdateInput, id uint) helpers.BaseResponse {
+	if user, err := s.repository.FindByID(ctx, id); user == nil || err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusNotFound,
+			Success: false,
+			Message: "User not found",
+		}
+	}
+
+	userEntity := model.UserUpdateInputToEntity(input)
+	if userEntity == nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusInternalServerError,
+			Success: false,
+			Message: "Error passing to model",
+		}
+	}
+
+	userEntity.ID = id
+
+	if err := s.ValidateEntityInput(ctx, userEntity); err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Errors:  err,
+		}
+	}
+
+	if err := s.repository.Update(ctx, userEntity); err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusInternalServerError,
+			Success: false,
+			Message: "Error updating data",
+			Errors:  err,
+		}
+	}
+
+	return helpers.BaseResponse{
+		Status:  fiber.StatusOK,
+		Success: true,
+		Message: "User successfully updated",
+	}
 }
 
 func (s *userService) ValidateEntityInput(ctx context.Context, user *entity.User) interface{} {

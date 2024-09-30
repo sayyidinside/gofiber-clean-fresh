@@ -13,6 +13,7 @@ type UserHandler interface {
 	GetUser(c *fiber.Ctx) error
 	GetAllUser(c *fiber.Ctx) error
 	CreateUser(c *fiber.Ctx) error
+	UpdateUser(c *fiber.Ctx) error
 }
 
 type userHandler struct {
@@ -92,6 +93,47 @@ func (h *userHandler) CreateUser(c *fiber.Ctx) error {
 	}
 
 	response := h.service.Create(c.Context(), &input)
+	response.Log = &logData
+
+	return helpers.ResponseFormatter(c, response)
+}
+
+func (h *userHandler) UpdateUser(c *fiber.Ctx) error {
+	logData := helpers.CreateLog(c)
+
+	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid ID format",
+			Log:     &logData,
+		})
+	}
+
+	var input model.UserUpdateInput
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Log:     &logData,
+		})
+	}
+
+	model.SanitizeUserUpdateInput(&input)
+
+	if err := helpers.ValidateInput(input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Errors:  err,
+			Log:     &logData,
+		})
+	}
+
+	response := h.service.UpdateByID(c.Context(), &input, uint(id))
 	response.Log = &logData
 
 	return helpers.ResponseFormatter(c, response)

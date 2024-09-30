@@ -46,6 +46,13 @@ type (
 		RePassword string `json:"repassword" form:"repassword" validate:"required,eqfield=Password"`
 		RoleID     uint   `json:"role_id" form:"role_id" validate:"required"`
 	}
+
+	UserUpdateInput struct {
+		Name     string `json:"name" form:"name" validate:"required"`
+		Username string `json:"username" form:"username" validate:"required"`
+		Email    string `json:"email" form:"email" validate:"required"`
+		RoleID   uint   `json:"role_id" form:"role_id" validate:"required"`
+	}
 )
 
 func UserToDetailModel(user *entity.User) *UserDetail {
@@ -97,6 +104,16 @@ func UserInputToEntity(userInput *UserInput) *entity.User {
 	}
 }
 
+func UserUpdateInputToEntity(input *UserUpdateInput) *entity.User {
+
+	return &entity.User{
+		Name:     input.Name,
+		Username: input.Username,
+		Email:    input.Email,
+		RoleID:   input.RoleID,
+	}
+}
+
 func SanitizeUserInput(input *UserInput) {
 	sanitizer := bluemonday.StrictPolicy()
 
@@ -105,4 +122,12 @@ func SanitizeUserInput(input *UserInput) {
 	input.Email = sanitizer.Sanitize(input.Email)
 	input.Password = sanitizer.Sanitize(input.Password)
 	input.RePassword = sanitizer.Sanitize(input.RePassword)
+}
+
+func SanitizeUserUpdateInput(input *UserUpdateInput) {
+	sanitizer := bluemonday.StrictPolicy()
+
+	input.Name = sanitizer.Sanitize(input.Name)
+	input.Username = sanitizer.Sanitize(input.Username)
+	input.Email = sanitizer.Sanitize(input.Email)
 }
