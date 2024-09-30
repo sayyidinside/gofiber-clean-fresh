@@ -14,4 +14,6 @@ func RegisterUserRoutes(route fiber.Router, handler handler.UserHandler) {
 
 	user.Put("/:id/reset-password", handler.ResetPassword)
 	user.Put("/:id", handler.UpdateUser)
+
+	user.Delete("/:id", handler.DeleteUser)
 }

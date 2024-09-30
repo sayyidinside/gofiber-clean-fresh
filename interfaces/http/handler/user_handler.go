@@ -15,6 +15,7 @@ type UserHandler interface {
 	CreateUser(c *fiber.Ctx) error
 	UpdateUser(c *fiber.Ctx) error
 	ResetPassword(c *fiber.Ctx) error
+	DeleteUser(c *fiber.Ctx) error
 }
 
 type userHandler struct {
@@ -176,6 +177,24 @@ func (h *userHandler) ResetPassword(c *fiber.Ctx) error {
 	}
 
 	response := h.service.ChangePassByID(c.Context(), &input, uint(id))
+	response.Log = &logData
+
+	return helpers.ResponseFormatter(c, response)
+}
+
+func (h *userHandler) DeleteUser(c *fiber.Ctx) error {
+	logData := helpers.CreateLog(c)
+
+	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid ID format",
+		})
+	}
+
+	response := h.service.DeleteByID(c.Context(), uint(id))
 	response.Log = &logData
 
 	return helpers.ResponseFormatter(c, response)

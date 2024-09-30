@@ -18,6 +18,7 @@ type UserService interface {
 	Create(ctx context.Context, input *model.UserInput) helpers.BaseResponse
 	UpdateByID(ctx context.Context, input *model.UserUpdateInput, id uint) helpers.BaseResponse
 	ChangePassByID(ctx context.Context, input *model.ChangePasswordInput, id uint) helpers.BaseResponse
+	DeleteByID(ctx context.Context, id uint) helpers.BaseResponse
 }
 
 type userService struct {
@@ -215,6 +216,31 @@ func (s *userService) ChangePassByID(ctx context.Context, input *model.ChangePas
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User password successfully updated",
+	}
+}
+
+func (s *userService) DeleteByID(ctx context.Context, id uint) helpers.BaseResponse {
+	user, err := s.repository.FindByID(ctx, id)
+	if err != nil || user == nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusNotFound,
+			Success: false,
+			Message: "User not found",
+		}
+	}
+
+	if err := s.repository.Delete(ctx, user); err != nil {
+		return helpers.BaseResponse{
+			Status:  fiber.StatusInternalServerError,
+			Success: false,
+			Message: "Error deleting data",
+		}
+	}
+
+	return helpers.BaseResponse{
+		Status:  fiber.StatusOK,
+		Success: true,
+		Message: "User successfully deleted",
 	}
 }
 
