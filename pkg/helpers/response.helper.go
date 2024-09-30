@@ -11,7 +11,7 @@ type BaseResponse struct {
 	Success bool         `json:"success"`
 	Message string       `json:"message"`
 	Data    *interface{} `json:"data,omitempty"`
-	Errors  *interface{} `json:"errors,omitempty"`
+	Errors  interface{}  `json:"errors,omitempty"`
 	Meta    *Meta        `json:"meta,omitempty"`
 	Log     *Log         `json:"log,omitempty"`
 }
@@ -71,6 +71,8 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 		location = res.Log.Location
 		startTime = res.Log.StartTime
 	}
+
+	// log.Printf("Unhandled error in Response Formatter: %v", res.Errors)
 
 	logSysData := LogSystemParam{
 		Identifier: c.GetRespHeader(fiber.HeaderXRequestID),
