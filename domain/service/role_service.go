@@ -94,13 +94,12 @@ func (s *roleService) Create(ctx context.Context, input *model.RoleInput) helper
 	}
 
 	permissions, err := s.permissionRepo.FindInID(ctx, input.Permissions)
-	if err != nil {
-		iError := interface{}(err)
+	if err != nil || len(*permissions) == 0 {
 		return helpers.BaseResponse{
-			Status:  fiber.StatusInternalServerError,
+			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Error retrieving permission data",
-			Errors:  &iError,
+			Message: "Permission data not found",
+			Errors:  err,
 		}
 	}
 
