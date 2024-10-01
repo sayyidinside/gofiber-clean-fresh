@@ -7,13 +7,13 @@ import (
 )
 
 type BaseResponse struct {
-	Status  int          `json:"status"`
-	Success bool         `json:"success"`
-	Message string       `json:"message"`
-	Data    *interface{} `json:"data,omitempty"`
-	Errors  interface{}  `json:"errors,omitempty"`
-	Meta    *Meta        `json:"meta,omitempty"`
-	Log     *Log         `json:"log,omitempty"`
+	Status  int         `json:"status"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+	Errors  interface{} `json:"errors,omitempty"`
+	Meta    *Meta       `json:"meta,omitempty"`
+	Log     *Log        `json:"log,omitempty"`
 }
 
 type SuccessResponse struct {
