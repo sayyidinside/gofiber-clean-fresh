@@ -84,13 +84,11 @@ func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
 	model.SanitizePermissionInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
-		errorData := interface{}(err)
-
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
-			Errors:  &errorData,
+			Errors:  err,
 			Log:     &log,
 		})
 	}
@@ -127,13 +125,11 @@ func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 	model.SanitizePermissionInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
-		errorData := interface{}(err)
-
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
-			Errors:  &errorData,
+			Errors:  err,
 			Log:     &log,
 		})
 	}

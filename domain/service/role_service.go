@@ -42,13 +42,11 @@ func (s *roleService) GetByID(ctx context.Context, id uint) helpers.BaseResponse
 
 	roleModel := model.RoleToDetailModel(role)
 
-	data := interface{}(roleModel)
-
 	return helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Role data found",
-		Data:    &data,
+		Data:    roleModel,
 	}
 }
 
@@ -64,8 +62,6 @@ func (s *roleService) GetAll(ctx context.Context, query *model.QueryGet, url str
 
 	roleModels := model.RoleToListModels(roles)
 
-	data := interface{}(roleModels)
-
 	totalData := s.repository.Count(ctx, query)
 
 	pagination := helpers.GeneratePaginationMetadata(query, url, totalData)
@@ -74,7 +70,7 @@ func (s *roleService) GetAll(ctx context.Context, query *model.QueryGet, url str
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Role data found",
-		Data:    &data,
+		Data:    roleModels,
 		Meta: &helpers.Meta{
 			Pagination: pagination,
 		},
@@ -225,7 +221,7 @@ func (s *roleService) DeleteByID(ctx context.Context, id uint) helpers.BaseRespo
 	}
 }
 
-func (s *roleService) validateEntityInput(ctx context.Context, role *entity.Role) *interface{} {
+func (s *roleService) validateEntityInput(ctx context.Context, role *entity.Role) interface{} {
 	errs := []helpers.ValidationError{}
 
 	// Check name duplication
@@ -237,8 +233,7 @@ func (s *roleService) validateEntityInput(ctx context.Context, role *entity.Role
 	}
 
 	if len(errs) != 0 {
-		intf := interface{}(errs)
-		return &intf
+		return errs
 	}
 
 	return nil

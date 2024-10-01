@@ -45,13 +45,12 @@ func (s *userService) GetByID(ctx context.Context, id uint) helpers.BaseResponse
 
 	// convert entity to model data
 	userModel := model.UserToDetailModel(user)
-	iUserModel := interface{}(userModel)
 
 	return helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User data found",
-		Data:    &iUserModel,
+		Data:    userModel,
 	}
 }
 
@@ -66,12 +65,12 @@ func (s *userService) GetByUUID(ctx context.Context, uuid uuid.UUID) helpers.Bas
 	}
 
 	userModel := model.UserToDetailModel(user)
-	iUser := interface{}(userModel)
+
 	return helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User data found",
-		Data:    &iUser,
+		Data:    userModel,
 	}
 }
 
@@ -87,8 +86,6 @@ func (s *userService) GetAll(ctx context.Context, query *model.QueryGet, url str
 
 	userModels := model.UserToListModel(users)
 
-	data := interface{}(userModels)
-
 	totalData := s.repository.Count(ctx, query)
 	pagination := helpers.GeneratePaginationMetadata(query, url, totalData)
 
@@ -96,7 +93,7 @@ func (s *userService) GetAll(ctx context.Context, query *model.QueryGet, url str
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User data found",
-		Data:    &data,
+		Data:    userModels,
 		Meta: &helpers.Meta{
 			Pagination: pagination,
 		},

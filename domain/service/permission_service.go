@@ -43,13 +43,11 @@ func (s *permissionService) GetByID(ctx context.Context, id uint) helpers.BaseRe
 	// convert entity to model data
 	permissionModel := model.PermissionToDetailModel(permission)
 
-	data := interface{}(permissionModel)
-
 	return helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Permission data found",
-		Data:    &data,
+		Data:    permissionModel,
 	}
 }
 
@@ -65,8 +63,6 @@ func (s *permissionService) GetAll(ctx context.Context, query *model.QueryGet, u
 
 	permissionModels := model.PermissionToListModels(permissions)
 
-	data := interface{}(permissionModels)
-
 	totalData := s.repository.Count(ctx, query)
 
 	pagination := helpers.GeneratePaginationMetadata(query, url, totalData)
@@ -75,7 +71,7 @@ func (s *permissionService) GetAll(ctx context.Context, query *model.QueryGet, u
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Permission data found",
-		Data:    &data,
+		Data:    permissionModels,
 		Meta: &helpers.Meta{
 			Pagination: pagination,
 		},
@@ -186,7 +182,7 @@ func (s *permissionService) DeleteByID(ctx context.Context, id uint) helpers.Bas
 	}
 }
 
-func (s *permissionService) validateEntityInput(ctx context.Context, permission *entity.Permission) *interface{} {
+func (s *permissionService) validateEntityInput(ctx context.Context, permission *entity.Permission) interface{} {
 	errs := []helpers.ValidationError{}
 
 	// Check existence of module_id
@@ -206,8 +202,7 @@ func (s *permissionService) validateEntityInput(ctx context.Context, permission 
 	}
 
 	if len(errs) != 0 {
-		intf := interface{}(errs)
-		return &intf
+		return errs
 	}
 
 	return nil
