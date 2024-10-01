@@ -10,7 +10,7 @@ type Role struct {
 	UUID        uuid.UUID     `json:"uuid" gorm:"uniqueIndex;type:char(36)"`
 	Name        string        `json:"name"`
 	IsAdmin     bool          `json:"is_admin" gorm:"default:false"`
-	Permissions []*Permission `json:"permissions" gorm:"many2many:role_permissions;"`
+	Permissions *[]Permission `json:"permissions" gorm:"many2many:role_permissions;"`
 	gorm.Model
 }
 

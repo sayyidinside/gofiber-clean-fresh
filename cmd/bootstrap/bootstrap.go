@@ -20,23 +20,27 @@ func Initialize(app *fiber.App, db *gorm.DB) {
 	userRepo := repository.NewUserRepository(db)
 	permissionRepo := repository.NewPermissionRepository(db)
 	moduleRepo := repository.NewModuleRepository(db)
+	roleRepo := repository.NewRoleRepository(db)
 
 	// Service
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, roleRepo)
 	permissionService := service.NewPermissionService(permissionRepo, moduleRepo)
 	moduleService := service.NewModuleService(moduleRepo)
+	roleService := service.NewRoleService(roleRepo, permissionRepo)
 
 	// Handler
 	userHandler := handler.NewUserHandler(userService)
 	permissionHandler := handler.NewPermissionHandler(permissionService)
 	moduleHandler := handler.NewModuleHandler(moduleService)
+	roleHandler := handler.NewRoleHandler(roleService)
 
 	// Setup handler to send to routes setup
 	handler := &handler.Handlers{
 		UserManagementHandler: &handler.UserManagementHandler{
-			UserHandler:       *userHandler,
+			UserHandler:       userHandler,
 			PermissionHandler: permissionHandler,
 			ModuleHandler:     moduleHandler,
+			RoleHandler:       roleHandler,
 		},
 	}
 

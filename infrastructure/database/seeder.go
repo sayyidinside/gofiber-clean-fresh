@@ -59,6 +59,20 @@ func Seeding(db *gorm.DB) {
 		}
 	}
 
+	{ // Seeding role guest
+		var totalRoleUser int64
+		tx.Model(&entity.Role{}).Where("name = ?", "User").Count(&totalRoleUser)
+		if totalRoleUser == 0 {
+			if err := seedingRoleGuest(tx); err != nil {
+				log.Printf("Seeding role user failed: %v", err)
+				tx.Rollback()
+				return
+			}
+
+			log.Println("Success seeding role user")
+		}
+	}
+
 	{ // Seeding user admin
 		var totalAdmin int64
 		tx.Model(&user.User{}).Where("name = ? AND email = ?", "Admin", "admin@jxboard.id").Count(&totalAdmin)
@@ -70,6 +84,20 @@ func Seeding(db *gorm.DB) {
 			}
 
 			log.Println("Success seeding user admin")
+		}
+	}
+
+	{ // Seeding user guest
+		var totalUser int64
+		tx.Model(&user.User{}).Where("name = ? AND email = ?", "User", "user@jxboard.id").Count(&totalUser)
+		if totalUser == 0 {
+			if err := seedingUserGuest(tx); err != nil {
+				log.Printf("Seeding user guest failed: %v", err)
+				tx.Rollback()
+				return
+			}
+
+			log.Println("Success seeding user guest")
 		}
 	}
 
@@ -389,6 +417,25 @@ func seedingRoleAdmin(tx *gorm.DB) error {
 	return nil
 }
 
+func seedingRoleGuest(tx *gorm.DB) error {
+	userUUID, err := uuid.Parse("4ff46fec-78ec-4f68-8db8-a495fac37c03")
+	if err != nil {
+		return err
+	}
+
+	userRole := entity.Role{
+		UUID:    userUUID,
+		Name:    "User",
+		IsAdmin: false,
+	}
+
+	if err := tx.Create(&userRole).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func seedingUserAdmin(tx *gorm.DB) error {
 	cfg := config.AppConfig
 
@@ -415,6 +462,41 @@ func seedingUserAdmin(tx *gorm.DB) error {
 		RoleID:      adminRole.ID,
 		Username:    "admin",
 		Email:       "admin@jxboard.id",
+		Password:    string(hasedPassword),
+		ValidatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+	}
+
+	if err := tx.Create(&user).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func seedingUserGuest(tx *gorm.DB) error {
+	// Set few value for user admin
+	userUUID, err := uuid.Parse("b2db4155-a1e4-42d7-b5b5-415bcfe54cdd")
+	if err != nil {
+		return err
+	}
+
+	hasedPassword, err := bcrypt.GenerateFromPassword([]byte("1234"), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	// Find admin role
+	var userRole entity.Role
+	if result := tx.Limit(1).Where("name = ?", "User").Find(&userRole); result.RowsAffected == 0 {
+		return errors.New("user role not found")
+	}
+
+	user := entity.User{
+		UUID:        userUUID,
+		Name:        "User",
+		RoleID:      userRole.ID,
+		Username:    "user",
+		Email:       "user@jxboard.id",
 		Password:    string(hasedPassword),
 		ValidatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}

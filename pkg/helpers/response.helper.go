@@ -1,20 +1,19 @@
 package helpers
 
 import (
-	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type BaseResponse struct {
-	Status  int          `json:"status"`
-	Success bool         `json:"success"`
-	Message string       `json:"message"`
-	Data    *interface{} `json:"data,omitempty"`
-	Errors  interface{}  `json:"errors,omitempty"`
-	Meta    *Meta        `json:"meta,omitempty"`
-	Log     *Log         `json:"log,omitempty"`
+	Status  int         `json:"status"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+	Errors  interface{} `json:"errors,omitempty"`
+	Meta    *Meta       `json:"meta,omitempty"`
+	Log     *Log        `json:"log,omitempty"`
 }
 
 type SuccessResponse struct {
@@ -73,7 +72,7 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 		startTime = res.Log.StartTime
 	}
 
-	log.Printf("Unhandled error in Response Formatter: %v", res.Errors)
+	// log.Printf("Unhandled error in Response Formatter: %v", res.Errors)
 
 	logSysData := LogSystemParam{
 		Identifier: c.GetRespHeader(fiber.HeaderXRequestID),

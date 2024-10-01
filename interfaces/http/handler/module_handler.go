@@ -84,12 +84,11 @@ func (h *moduleHandler) CreateModule(c *fiber.Ctx) error {
 	model.SanitizeModuleInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
-		iError := interface{}(err)
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
-			Errors:  &iError,
+			Errors:  err,
 			Log:     &log,
 		})
 	}
@@ -126,13 +125,11 @@ func (h *moduleHandler) UpdateModule(c *fiber.Ctx) error {
 	model.SanitizeModuleInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
-		iError := interface{}(err)
-
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
-			Errors:  &iError,
+			Errors:  err,
 			Log:     &log,
 		})
 	}

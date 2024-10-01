@@ -9,25 +9,25 @@ import (
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
-type PermissionHandler interface {
-	GetPermission(c *fiber.Ctx) error
-	GetAllPermission(c *fiber.Ctx) error
-	CreatePermission(c *fiber.Ctx) error
-	UpdatePermission(c *fiber.Ctx) error
-	DeletePermission(c *fiber.Ctx) error
+type RoleHandler interface {
+	GetRole(c *fiber.Ctx) error
+	GetAllRole(c *fiber.Ctx) error
+	CreateRole(c *fiber.Ctx) error
+	UpdateRole(c *fiber.Ctx) error
+	DeleteRole(c *fiber.Ctx) error
 }
 
-type permissionHandler struct {
-	service service.PermissionService
+type roleHandler struct {
+	service service.RoleService
 }
 
-func NewPermissionHandler(service service.PermissionService) PermissionHandler {
-	return &permissionHandler{
+func NewRoleHandler(service service.RoleService) RoleHandler {
+	return &roleHandler{
 		service: service,
 	}
 }
 
-func (h *permissionHandler) GetPermission(c *fiber.Ctx) error {
+func (h *roleHandler) GetRole(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
@@ -46,10 +46,10 @@ func (h *permissionHandler) GetPermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *permissionHandler) GetAllPermission(c *fiber.Ctx) error {
+func (h *roleHandler) GetAllRole(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
-	query := new(model.QueryGet)
 
+	query := new(model.QueryGet)
 	if err := c.QueryParser(query); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
@@ -68,9 +68,9 @@ func (h *permissionHandler) GetAllPermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
+func (h *roleHandler) CreateRole(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
-	var input model.PermissionInput
+	var input model.RoleInput
 
 	if err := c.BodyParser(&input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -81,14 +81,15 @@ func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizePermissionInput(&input)
+	model.SanitizeRoleInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
+		iError := interface{}(err)
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
-			Errors:  err,
+			Errors:  &iError,
 			Log:     &log,
 		})
 	}
@@ -99,7 +100,7 @@ func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
+func (h *roleHandler) UpdateRole(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
@@ -111,7 +112,7 @@ func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 		})
 	}
 
-	var input model.PermissionInput
+	var input model.RoleInput
 
 	if err := c.BodyParser(&input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -122,7 +123,7 @@ func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizePermissionInput(&input)
+	model.SanitizeRoleInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -140,7 +141,7 @@ func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *permissionHandler) DeletePermission(c *fiber.Ctx) error {
+func (h *roleHandler) DeleteRole(c *fiber.Ctx) error {
 	log := helpers.CreateLog(c)
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
