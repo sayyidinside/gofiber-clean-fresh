@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
@@ -198,6 +197,9 @@ func (r *roleRepository) NameExist(ctx context.Context, role *entity.Role) bool 
 }
 
 func (r *roleRepository) ReplacePermissionsWithTransaction(ctx context.Context, tx *gorm.DB, role *entity.Role, permissions *[]entity.Permission) error {
-	log.Println("isjf ipohpoajhdpioh wadoipa jpdondpinopawodopadwnawdniadandonadd")
-	return r.DB.Model(&role).Association("Permissions").Replace(permissions)
+	// GORM requires data to be pre-loaded before using the Association.
+	tx.Preload("Permissions").First(&role)
+
+	return tx.Model(&role).Association("Permissions").Replace(permissions)
+
 }
