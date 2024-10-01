@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -140,7 +139,6 @@ func (h *roleHandler) UpdateRole(c *fiber.Ctx) error {
 
 	response := h.service.UpdateByID(c.Context(), &input, uint(id))
 	response.Log = &log
-	fmt.Println("############################")
 
 	return helpers.ResponseFormatter(c, response)
 }
