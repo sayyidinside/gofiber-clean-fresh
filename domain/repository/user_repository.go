@@ -65,6 +65,8 @@ func (r *userRepository) FindByUUID(ctx context.Context, uuid uuid.UUID) (*entit
 			return db.Select("id", "name").Unscoped()
 		}).
 		Find(&user); result.Error != nil || result.RowsAffected == 0 {
+		logData.Message = "Not Passed"
+		logData.Err = result.Error
 		return nil, result.Error
 	}
 
@@ -95,6 +97,8 @@ func (r *userRepository) FindAll(ctx context.Context, query *model.QueryGet) (*[
 	)
 
 	if err := tx.Find(&users).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
 		return nil, err
 	}
 
