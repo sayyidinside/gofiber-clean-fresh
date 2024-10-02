@@ -34,12 +34,18 @@ func NewUserService(repository repository.UserRepository, roleRepository reposit
 }
 
 func (s *userService) GetByID(ctx context.Context, id uint) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	user, err := s.repository.FindByID(ctx, id)
 	if user == nil || err != nil {
+		logData.Message = "User Not Found"
+		logData.Err = err
 		return helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
-			Message: "User Not Found",
+			Message: logData.Message,
+			Errors:  logData.Err,
 		}
 	}
 
