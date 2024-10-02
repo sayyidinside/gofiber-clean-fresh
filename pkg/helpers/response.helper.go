@@ -48,11 +48,6 @@ type ErrorResponse struct {
 	Errors  *interface{} `json:"errors,omitempty"`
 }
 
-type Log struct {
-	Location  string
-	StartTime time.Time
-}
-
 func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 	// Insert log
 	var username string
