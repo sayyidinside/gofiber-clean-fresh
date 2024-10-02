@@ -60,15 +60,22 @@ func (h *userHandler) GetUser(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) GetAllUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	query := new(model.QueryGet)
 
 	if err := c.QueryParser(query); err != nil {
+		logData.Message = "Invalid or malformed request query"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid or malformed request query",
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  logData.Err,
 		})
 	}
 
@@ -82,27 +89,36 @@ func (h *userHandler) GetAllUser(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) CreateUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var input model.UserInput
 
 	if err := c.BodyParser(&input); err != nil {
+		logData.Message = "Invalid or malformed request body"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid or malformed request body",
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
 	model.SanitizeUserInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
+		logData.Message = "Invalid or malformed request body"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid or malformed request body",
-			Errors:  err,
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
@@ -113,37 +129,48 @@ func (h *userHandler) CreateUser(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) UpdateUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
+		logData.Message = "Invalid ID format"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid ID format",
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
 	var input model.UserUpdateInput
 	if err := c.BodyParser(&input); err != nil {
+		logData.Message = "Invalid or malformed request body"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid or malformed request body",
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
 	model.SanitizeUserUpdateInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
+		logData.Message = "Invalid or malformed request body"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid or malformed request body",
-			Errors:  err,
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
@@ -154,37 +181,48 @@ func (h *userHandler) UpdateUser(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) ResetPassword(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
+		logData.Message = "Invalid ID format"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid ID format",
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
 	var input model.ChangePasswordInput
 	if err := c.BodyParser(&input); err != nil {
+		logData.Message = "Invalid or malformed request body"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid or malformed request body",
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
 	model.SanitizeChangePasswordInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
+		logData.Message = "Invalid or malformed request body"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid or malformed request body",
-			Errors:  err,
+			Message: logData.Message,
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
@@ -195,14 +233,21 @@ func (h *userHandler) ResetPassword(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) DeleteUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
+		logData.Message = "Invalid ID format"
+		logData.Err = err
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid ID format",
+			Message: logData.Message,
+			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
