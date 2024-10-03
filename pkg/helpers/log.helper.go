@@ -1,8 +1,10 @@
 package helpers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -54,8 +56,17 @@ type LogSystemParam struct {
 	Message    string
 	StartTime  time.Time
 	EndTime    time.Time
+	Duration   string
 	Username   string
 	Err        interface{}
+}
+
+type Log struct {
+	StartTime time.Time
+	EndTime   time.Time
+	Location  string
+	Message   string
+	Err       interface{}
 }
 
 func InitLogger() {
@@ -263,6 +274,8 @@ func GenerateLogAPI(apiLogData LogAPIParam) {
 		logFunc = apiLogger.Warn
 	}
 
+	duration := FormatDuration(apiLogData.StartTime, apiLogData.EndTime)
+
 	logFunc(apiLogData.Message,
 		zap.String("identifier", apiLogData.Identifier),
 		zap.Time("timestamp", apiLogData.Timestamp),
@@ -279,6 +292,7 @@ func GenerateLogAPI(apiLogData LogAPIParam) {
 		zap.String("username", apiLogData.Username),
 		zap.Time("start_time", apiLogData.StartTime),
 		zap.Time("end_time", apiLogData.EndTime),
+		zap.String("duration", duration),
 	)
 }
 
@@ -287,6 +301,7 @@ func GenerateLogSystem(logData LogSystemParam) {
 		category         string
 		humanTime        = logData.EndTime.Format(time.RFC1123)
 		statusCodeString = strconv.Itoa(logData.StatusCode)
+		duration         = FormatDuration(logData.StartTime, logData.EndTime)
 	)
 
 	switch {
@@ -306,6 +321,7 @@ func GenerateLogSystem(logData LogSystemParam) {
 		zap.String("message", logData.Message),
 		zap.Time("start_time", logData.StartTime),
 		zap.Time("end_time", logData.EndTime),
+		zap.String("duration", duration),
 		zap.String("identifier", logData.Identifier),
 		zap.Any("username", logData.Username),
 		zap.Any("errors", logData.Err),
@@ -382,5 +398,119 @@ func CreateLog(i interface{}) Log {
 	return Log{
 		StartTime: time.Now(),
 		Location:  fmt.Sprintf("%s/%s.%s", packagePath, contrName, funcName),
+		Message:   "Passed",
+	}
+}
+
+func InitialLogSystem() Log {
+	return Log{
+		StartTime: time.Now(),
+		Message:   "Passed",
+	}
+}
+
+// Function to create log
+func CreateLogSystem(ctx context.Context, message string) *Log {
+	// Extract log data from context
+	identifier, _ := ctx.Value("identifier").(string)
+	username, _ := ctx.Value("username").(string)
+	funcName, contrName, packagePath := GetFunctionAndStructName(ctx.Value("function"))
+
+	return &Log{
+		StartTime: time.Now(),
+		Location:  fmt.Sprintf("%s/%s.%s", packagePath, contrName, funcName),
+		Message:   fmt.Sprintf("User: %s, ID: %s, Message: %s", username, identifier, message),
+	}
+}
+
+func CreateLogSystem23(ctx context.Context, logData *Log) {
+	// func CreateLogSystem23(ctx context.Context, location string, message string, startTime time.Time, err interface{}) {
+	// Extract function and location
+	// funcName, contrName, packagePath := GetFunctionAndStructName(i)
+
+	// Create Log
+	logSysData := LogSystemParam{
+		StartTime: logData.StartTime,
+		EndTime:   time.Now(),
+		Location:  logData.Location,
+		Message:   logData.Message,
+		Err:       logData.Err,
+	}
+
+	// Get identifier and username from context
+	if identifier, ok := ctx.Value("identifier").(string); ok {
+		logSysData.Identifier = identifier
+	}
+	if username, ok := ctx.Value("username").(string); ok {
+		logSysData.Username = username
+	}
+
+	duration := FormatDuration(logSysData.StartTime, logSysData.EndTime)
+
+	// Log debug waktu start dan end
+	log.Printf("Log for %s - StartTime: %s, EndTime: %s, Duration: %s\n",
+		logSysData.Location, logData.StartTime.Format(time.RFC3339), logSysData.EndTime.Format(time.RFC3339), duration)
+	log.Println("=============================================================")
+
+	// LogSysChannel could be where your logs are processed
+	LogSysChannel <- logSysData
+}
+
+// Extract identifier and username and insert into context
+func ExtractIdentifierAndUsername(c *fiber.Ctx) context.Context {
+	ctx := context.Background()
+
+	identifier := c.GetRespHeader(fiber.HeaderXRequestID)
+	username := ""
+	if sessionUsername := c.Locals("username"); sessionUsername != nil {
+		username = sessionUsername.(string)
+	}
+
+	ctx = context.WithValue(ctx, "identifier", identifier)
+	ctx = context.WithValue(ctx, "username", username)
+
+	return ctx
+}
+
+func InitialLogExtractIdentifierAndUsername(c *fiber.Ctx, i interface{}) (context.Context, Log) {
+	ctx := context.Background()
+
+	// extract
+	identifier := c.GetRespHeader(fiber.HeaderXRequestID)
+	username := ""
+	if sessionUsername := c.Locals("username"); sessionUsername != nil {
+		username = sessionUsername.(string)
+	}
+
+	// passing to context
+	ctx = context.WithValue(ctx, "identifier", identifier)
+	ctx = context.WithValue(ctx, "username", username)
+
+	log := CreateLog(i)
+
+	return ctx, log
+}
+
+func FormatDuration(startTime, endTime time.Time) string {
+	duration := endTime.Sub(startTime)
+	durationInMilliseconds := duration.Seconds() * 1000 // Menghitung durasi dalam milidetik
+	return fmt.Sprintf("%.4fms", durationInMilliseconds)
+}
+
+func LogSystemWithDefer(ctx context.Context, logData *Log) func() {
+	// Log masuk
+	// logData.Message = "Entering"
+	CreateLogSystem23(ctx, logData)
+	log.Println(logData)
+
+	// `defer` yang akan dieksekusi saat fungsi selesai
+	return func() {
+		if logData.Err != nil {
+			logData.Message = "Exiting with error: " + logData.Err.(string)
+		} else {
+			logData.Message = "Exiting"
+		}
+
+		CreateLogSystem23(ctx, logData)
 	}
 }

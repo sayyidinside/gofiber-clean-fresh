@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
@@ -36,12 +37,24 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 }
 
 func (r *userRepository) FindByID(ctx context.Context, id uint) (*entity.User, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var user entity.User
-	if result := r.DB.WithContext(ctx).Limit(1).Where("id = ?", id).
+	result := r.DB.WithContext(ctx).
+		Limit(1).
+		Where("id = ?", id).
 		Preload("Role", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name").Unscoped()
 		}).
-		Find(&user); result.Error != nil || result.RowsAffected == 0 {
+		Find(&user)
+
+	// Pengecekan error
+	if result.Error != nil || result.RowsAffected == 0 {
+		// Perbarui logData sebelum return
+		log.Println("// Perbarui logData sebelum return")
+		logData.Message = "Not Passed"
+		logData.Err = result.Error
 		return nil, result.Error
 	}
 

@@ -11,6 +11,7 @@ import (
 
 type UserHandler interface {
 	GetUser(c *fiber.Ctx) error
+	// GetUser(c *fiber.Ctx, ctx context.Context, log *helpers.Log) error
 	GetAllUser(c *fiber.Ctx) error
 	CreateUser(c *fiber.Ctx) error
 	UpdateUser(c *fiber.Ctx) error
@@ -29,20 +30,31 @@ func NewUserHandler(service service.UserService) UserHandler {
 }
 
 func (h *userHandler) GetUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	// Simulate delay
+	// time.Sleep(100 * time.Millisecond)
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
+		logData.Message = "Invalid ID Format"
+		logData.Err = err
+		// helpers.CreateLogSystem23(ctx, logData)
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid ID format",
+			Message: logData.Message,
 			Log:     &logData,
 		})
 	}
 
-	response := h.service.GetByID(c.Context(), uint(id))
+	response := h.service.GetByID(ctx, uint(id))
 	response.Log = &logData
+
+	// helpers.CreateLogSystem23(ctx, logData)
 
 	return helpers.ResponseFormatter(c, response)
 }
