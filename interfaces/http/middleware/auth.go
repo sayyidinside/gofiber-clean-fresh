@@ -126,7 +126,8 @@ func Authentication() fiber.Handler {
 	}
 }
 
-// Authorization middleware used to validate authenticated user have a permission to access endpoint
+// Authorization middleware used to validate authenticated user have a permission to access endpoint.
+//
 // ! Important, that this middleware be called or used after Authentication middleware
 func Authorization(isAdminOnly bool, isValidOnly bool, allowedPermissions []string) fiber.Handler {
 	return func(c *fiber.Ctx) error {

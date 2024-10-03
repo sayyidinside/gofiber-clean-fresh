@@ -3,17 +3,63 @@ package users
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
 )
 
 func RegisterUserRoutes(route fiber.Router, handler handler.UserHandler) {
 	user := route.Group("/informations")
 
-	user.Get("/:id", handler.GetUser)
-	user.Get("/", handler.GetAllUser)
-	user.Post("/", handler.CreateUser)
+	user.Use(middleware.Authentication())
 
-	user.Put("/:id/reset-password", handler.ResetPassword)
-	user.Put("/:id", handler.UpdateUser)
+	user.Get(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"View User",
+			"Create User",
+			"Update User",
+			"Delete User",
+		}),
+		handler.GetUser,
+	)
 
-	user.Delete("/:id", handler.DeleteUser)
+	user.Get(
+		"/",
+		middleware.Authorization(false, false, []string{
+			"View User",
+			"Create User",
+			"Update User",
+			"Delete User",
+		}),
+		handler.GetAllUser,
+	)
+
+	user.Post(
+		"/",
+		middleware.Authorization(false, false, []string{
+			"Create User",
+		}),
+		handler.CreateUser,
+	)
+
+	user.Put(
+		"/:id/reset-password",
+		middleware.Authorization(true, false, []string{}),
+		handler.ResetPassword,
+	)
+
+	user.Put(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"Update User",
+		}),
+		handler.UpdateUser,
+	)
+
+	user.Delete(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"Delete User",
+		}),
+		handler.DeleteUser,
+	)
 }
