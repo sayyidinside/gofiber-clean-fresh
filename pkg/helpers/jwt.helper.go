@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
 )
 
-func GenerateRefreshToken(id uint, expireTime int, secret string, isRefresh bool) (string, error) {
+func GenerateToken(user *entity.User, expireTime int, secret string, isRefresh bool) (string, error) {
 	decodedSecret, err := base64.StdEncoding.DecodeString(secret)
 	if err != nil {
 		return "", fmt.Errorf("could not decode token secret: %w", err)
@@ -20,7 +21,7 @@ func GenerateRefreshToken(id uint, expireTime int, secret string, isRefresh bool
 	}
 
 	claim := make(jwt.MapClaims)
-	claim["sub"] = id
+	claim["sub"] = user.ID
 	claim["iat"] = time.Now().Unix()
 	claim["nbf"] = time.Now().Unix()
 
@@ -28,6 +29,19 @@ func GenerateRefreshToken(id uint, expireTime int, secret string, isRefresh bool
 		claim["exp"] = time.Now().Add(time.Duration(expireTime) * time.Hour).Unix()
 	} else {
 		claim["exp"] = time.Now().Add(time.Duration(expireTime) * time.Minute).Unix()
+
+		claim["name"] = user.Name
+		claim["email"] = user.Email
+		claim["is_admin"] = user.Role.IsAdmin
+		claim["validated"] = user.ValidatedAt.Valid
+		claim["validated_at"] = user.ValidatedAt.Time.Unix()
+
+		var permissions []string
+		for _, permission := range *user.Role.Permissions {
+			permissions = append(permissions, permission.Name)
+		}
+
+		claim["permissions"] = permissions
 	}
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodRS256, claim).SignedString(key)
@@ -38,7 +52,7 @@ func GenerateRefreshToken(id uint, expireTime int, secret string, isRefresh bool
 	return token, nil
 }
 
-func ValidateToken(token string, secret string) (*jwt.MapClaims, error) {
+func ValidateToken(token string, secret string) (jwt.MapClaims, error) {
 	decodedSecret, err := base64.StdEncoding.DecodeString(secret)
 	if err != nil {
 		return nil, fmt.Errorf("could not decode token secret: %w", err)
@@ -69,5 +83,5 @@ func ValidateToken(token string, secret string) (*jwt.MapClaims, error) {
 		return nil, fmt.Errorf("validate: invalid token")
 	}
 
-	return &claim, nil
+	return claim, nil
 }
