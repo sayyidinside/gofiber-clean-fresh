@@ -3,28 +3,63 @@ package users
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
 )
 
 func RegisterUserRoutes(route fiber.Router, handler handler.UserHandler) {
 	user := route.Group("/informations")
 
-	user.Get("/:id", handler.GetUser)
-	// user.Get("/:id", func(c *fiber.Ctx) error {
-	// 	// Extract identifier and username
-	// 	ctx := helpers.ExtractIdentifierAndUsername(c)
+	user.Use(middleware.Authentication())
 
-	// 	// Create initial log system
-	// 	logData := helpers.CreateLogSystem(ctx, "Get User by ID Request")
+	user.Get(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"View User",
+			"Create User",
+			"Update User",
+			"Delete User",
+		}),
+		handler.GetUser,
+	)
 
-	// 	// Call the handler with the new context
-	// 	return handler.GetUser(c, ctx, logData)
-	// })
+	user.Get(
+		"/",
+		middleware.Authorization(false, false, []string{
+			"View User",
+			"Create User",
+			"Update User",
+			"Delete User",
+		}),
+		handler.GetAllUser,
+	)
 
-	user.Get("/", handler.GetAllUser)
-	user.Post("/", handler.CreateUser)
+	user.Post(
+		"/",
+		middleware.Authorization(false, false, []string{
+			"Create User",
+		}),
+		handler.CreateUser,
+	)
 
-	user.Put("/:id/reset-password", handler.ResetPassword)
-	user.Put("/:id", handler.UpdateUser)
+	user.Put(
+		"/:id/reset-password",
+		middleware.Authorization(true, false, []string{}),
+		handler.ResetPassword,
+	)
 
-	user.Delete("/:id", handler.DeleteUser)
+	user.Put(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"Update User",
+		}),
+		handler.UpdateUser,
+	)
+
+	user.Delete(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"Delete User",
+		}),
+		handler.DeleteUser,
+	)
 }

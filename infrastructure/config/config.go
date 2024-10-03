@@ -16,8 +16,12 @@ type Config struct {
 	Debug     bool   `mapstructure:"DEBUG"`
 
 	// JWT
-	JwtSecret string `mapstructure:"JWT_SECRET"`
-	JwtTime   int    `mapstructure:"JWT_TIME"`
+	JwtRefreshPrivateSecret string `mapstructure:"JWT_REFRESH_PRIVATE_SECRET"`
+	JwtRefreshPublicSecret  string `mapstructure:"JWT_REFRESH_PUBLIC_SECRET"`
+	JwtAccessPrivateSecret  string `mapstructure:"JWT_ACCESS_PRIVATE_SECRET"`
+	JwtAccessPublicSecret   string `mapstructure:"JWT_ACCESS_PUBLIC_SECRET"`
+	JwtAccessTime           int    `mapstructure:"JWT_ACCESS_TIME"`
+	JwtRefreshTime          int    `mapstructure:"JWT_REFRESH_TIME"`
 
 	// Cors
 	CorsMaxAge       int    `mapstructure:"CORS_MAX_AGE"`
@@ -68,6 +72,8 @@ func LoadConfig() error {
 
 	// Set default for env
 	viper.SetDefault("PORT", "4000")
+	viper.SetDefault("JWT_ACCESS_TIME", 30)
+	viper.SetDefault("JWT_REFRESH_TIME", 168)
 
 	// Try to read the configuration file (optional)
 	if err := viper.ReadInConfig(); err != nil {
