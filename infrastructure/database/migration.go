@@ -10,4 +10,5 @@ func Migrate(db *gorm.DB) {
 	db.AutoMigrate(&entity.Permission{})
 	db.AutoMigrate(&entity.Role{})
 	db.AutoMigrate(&entity.User{})
+	db.AutoMigrate(&entity.RefreshToken{})
 }
