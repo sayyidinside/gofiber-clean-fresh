@@ -40,13 +40,11 @@ func (s *moduleService) GetByID(ctx context.Context, id uint) helpers.BaseRespon
 
 	moduleModel := model.ModuleToDetailModel(module)
 
-	data := interface{}(moduleModel)
-
 	return helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Module data found",
-		Data:    &data,
+		Data:    moduleModel,
 	}
 }
 
@@ -62,8 +60,6 @@ func (s *moduleService) GetAll(ctx context.Context, query *model.QueryGet, url s
 
 	moduleModels := model.ModuleToListModels(modules)
 
-	data := interface{}(moduleModels)
-
 	totalData := s.repository.Count(ctx, query)
 
 	pagination := helpers.GeneratePaginationMetadata(query, url, totalData)
@@ -72,7 +68,7 @@ func (s *moduleService) GetAll(ctx context.Context, query *model.QueryGet, url s
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Module data found",
-		Data:    &data,
+		Data:    moduleModels,
 		Meta: &helpers.Meta{
 			Pagination: pagination,
 		},
@@ -176,7 +172,7 @@ func (s *moduleService) DeleteByID(ctx context.Context, id uint) helpers.BaseRes
 	}
 }
 
-func (s *moduleService) validateEntityInput(ctx context.Context, module *entity.Module) *interface{} {
+func (s *moduleService) validateEntityInput(ctx context.Context, module *entity.Module) interface{} {
 	errs := []helpers.ValidationError{}
 
 	// Check name duplication
@@ -188,8 +184,7 @@ func (s *moduleService) validateEntityInput(ctx context.Context, module *entity.
 	}
 
 	if len(errs) != 0 {
-		intf := interface{}(errs)
-		return &intf
+		return errs
 	}
 
 	return nil

@@ -11,6 +11,7 @@ import (
 )
 
 type RoleRepository interface {
+	BeginTransaction(ctx context.Context) *gorm.DB
 	FindByID(ctx context.Context, id uint) (*entity.Role, error)
 	FindByIDUnscoped(ctx context.Context, id uint) (*entity.Role, error)
 	FindByUUID(ctx context.Context, uuid uuid.UUID) (*entity.Role, error)
@@ -18,9 +19,10 @@ type RoleRepository interface {
 	Count(ctx context.Context, query *model.QueryGet) int64
 	CountUnscoped(ctx context.Context, query *model.QueryGet) int64
 	Insert(ctx context.Context, role *entity.Role) error
-	Update(ctx context.Context, role *entity.Role) error
+	UpdateWithTransaction(ctx context.Context, tx *gorm.DB, role *entity.Role) error
 	Delete(ctx context.Context, role *entity.Role) error
 	NameExist(ctx context.Context, role *entity.Role) bool
+	ReplacePermissionsWithTransaction(ctx context.Context, tx *gorm.DB, role *entity.Role, permissions *[]entity.Permission) error
 }
 
 type roleRepository struct {
@@ -29,6 +31,10 @@ type roleRepository struct {
 
 func NewRoleRepository(db *gorm.DB) RoleRepository {
 	return &roleRepository{DB: db}
+}
+
+func (r *roleRepository) BeginTransaction(ctx context.Context) *gorm.DB {
+	return r.DB.Begin()
 }
 
 func (r *roleRepository) FindByID(ctx context.Context, id uint) (*entity.Role, error) {
@@ -168,6 +174,10 @@ func (r *roleRepository) Update(ctx context.Context, role *entity.Role) error {
 	return r.DB.WithContext(ctx).Where("id = ?", role.ID).Updates(role).Error
 }
 
+func (r *roleRepository) UpdateWithTransaction(ctx context.Context, tx *gorm.DB, role *entity.Role) error {
+	return tx.WithContext(ctx).Where("id = ?", role.ID).Updates(role).Error
+}
+
 func (r *roleRepository) Delete(ctx context.Context, role *entity.Role) error {
 	return r.DB.WithContext(ctx).Where("id = ?", role.ID).Delete(role).Error
 }
@@ -184,4 +194,12 @@ func (r *roleRepository) NameExist(ctx context.Context, role *entity.Role) bool 
 	tx.Count(&total)
 
 	return total != 0
+}
+
+func (r *roleRepository) ReplacePermissionsWithTransaction(ctx context.Context, tx *gorm.DB, role *entity.Role, permissions *[]entity.Permission) error {
+	// GORM requires data to be pre-loaded before using the Association.
+	tx.Preload("Permissions").First(&role)
+
+	return tx.Model(&role).Association("Permissions").Replace(permissions)
+
 }

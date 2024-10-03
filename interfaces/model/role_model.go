@@ -24,20 +24,20 @@ type (
 	RoleInput struct {
 		Name        string `json:"name" form:"name" xml:"name" validate:"required"`
 		IsAdmin     bool   `json:"is_admin" form:"is_admin" xml:"is_admin" validate:"boolean"`
-		Permissions []uint `json:"permissions" form:"permissions" xml:"permissions" validate:"required"`
+		Permissions []uint `json:"permissions" form:"permissions" xml:"permissions" validate:"required,gt=0,dive,numeric"`
 	}
 )
 
-// func RoleToDetailModel(role *entity.Role) *RoleDetail {
-// 	permissions := PermissionToListModels(&role.Permissions)
+func RoleToDetailModel(role *entity.Role) *RoleDetail {
+	permissions := PermissionToListModels(role.Permissions)
 
-// 	return &RoleDetail{
-// 		ID:          role.ID,
-// 		UUID:        role.UUID,
-// 		Name:        role.Name,
-// 		Permissions: permissions,
-// 	}
-// }
+	return &RoleDetail{
+		ID:          role.ID,
+		UUID:        role.UUID,
+		Name:        role.Name,
+		Permissions: permissions,
+	}
+}
 
 func RoleToListModel(role *entity.Role) *RoleList {
 	return &RoleList{

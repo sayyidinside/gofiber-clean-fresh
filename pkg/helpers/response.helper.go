@@ -7,13 +7,13 @@ import (
 )
 
 type BaseResponse struct {
-	Status  int          `json:"status"`
-	Success bool         `json:"success"`
-	Message string       `json:"message"`
-	Data    *interface{} `json:"data,omitempty"`
-	Errors  interface{}  `json:"errors,omitempty"`
-	Meta    *Meta        `json:"meta,omitempty"`
-	Log     *Log         `json:"log,omitempty"`
+	Status  int         `json:"status"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+	Errors  interface{} `json:"errors,omitempty"`
+	Meta    *Meta       `json:"meta,omitempty"`
+	Log     *Log        `json:"log,omitempty"`
 }
 
 type SuccessResponse struct {
@@ -46,11 +46,6 @@ type ErrorResponse struct {
 	Success bool         `json:"success"`
 	Message string       `json:"message"`
 	Errors  *interface{} `json:"errors,omitempty"`
-}
-
-type Log struct {
-	Location  string
-	StartTime time.Time
 }
 
 func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
