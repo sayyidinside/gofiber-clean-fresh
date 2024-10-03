@@ -23,8 +23,39 @@ func NewAuthHandler(service service.AuthService) AuthHandler {
 }
 
 func (h *authHandler) Login(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	logDataData := helpers.CreateLog(c)
 	var input model.LoginInput
+
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Log:     &logDataData,
+		})
+	}
+
+	if err := helpers.ValidateInput(input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Errors:  err,
+			Log:     &logDataData,
+		})
+	}
+
+	model.SanitizeLoginInput(&input)
+
+	response := h.service.Login(c.Context(), &input)
+	response.Log = &logDataData
+
+	return helpers.ResponseFormatter(c, response)
+}
+
+func (h *authHandler) Logout(c *fiber.Ctx) error {
+	logData := helpers.CreateLog(c)
+	var input model.TokenInput
 
 	if err := c.BodyParser(&input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -34,6 +65,8 @@ func (h *authHandler) Login(c *fiber.Ctx) error {
 			Log:     &logData,
 		})
 	}
+
+	model.SanitizeTokenInput(&input)
 
 	if err := helpers.ValidateInput(input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -45,25 +78,73 @@ func (h *authHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizeLoginInput(&input)
-
-	response := h.service.Login(c.Context(), &input)
+	response := h.service.Logout(c.Context(), input.Token)
 	response.Log = &logData
 
 	return helpers.ResponseFormatter(c, response)
 }
 
-func (h *authHandler) Logout(c *fiber.Ctx) error {
-	// log := helpers.CreateLog(c)
-	return nil
-}
-
 func (h *authHandler) Refresh(c *fiber.Ctx) error {
-	// log := helpers.CreateLog(c)
-	return nil
+	logData := helpers.CreateLog(c)
+	var input model.TokenInput
+
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Log:     &logData,
+		})
+	}
+
+	model.SanitizeTokenInput(&input)
+
+	if err := helpers.ValidateInput(input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Errors:  err,
+			Log:     &logData,
+		})
+	}
+
+	response := h.service.Refresh(c.Context(), input.Token)
+	response.Log = &logData
+
+	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *authHandler) Verify(c *fiber.Ctx) error {
-	// log := helpers.CreateLog(c)
-	return nil
+	logData := helpers.CreateLog(c)
+	var input model.TokenInput
+
+	if err := c.BodyParser(&input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Log:     &logData,
+		})
+	}
+
+	model.SanitizeTokenInput(&input)
+
+	if err := helpers.ValidateInput(input); err != nil {
+		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+			Status:  fiber.StatusBadRequest,
+			Success: false,
+			Message: "Invalid or malformed request body",
+			Errors:  err,
+			Log:     &logData,
+		})
+	}
+
+	response := h.service.VerifyAccessToken(c.Context(), input.Token)
+	if !response.Success {
+		response = h.service.VerifyRefreshToken(c.Context(), input.Token)
+	}
+	response.Log = &logData
+
+	return helpers.ResponseFormatter(c, response)
 }
