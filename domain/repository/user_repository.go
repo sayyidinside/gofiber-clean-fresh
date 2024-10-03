@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
@@ -22,6 +23,7 @@ type UserRepository interface {
 	NameExist(ctx context.Context, user *entity.User) bool
 	EmailExist(ctx context.Context, user *entity.User) bool
 	UsernameExist(ctx context.Context, user *entity.User) bool
+	FindByUsernameOrEmail(ctx context.Context, usernameOrEmail string) (*entity.User, error)
 	// Create(*User) error
 }
 
@@ -185,4 +187,19 @@ func (r *userRepository) UsernameExist(ctx context.Context, user *entity.User) b
 
 	tx.Count(&totalData)
 	return totalData != 0
+}
+
+func (r *userRepository) FindByUsernameOrEmail(ctx context.Context, usernameOrEmail string) (*entity.User, error) {
+	var user entity.User
+
+	result := r.DB.WithContext(ctx).Limit(1).Where("username = ?", usernameOrEmail).Or("email = ?", usernameOrEmail).Preload("Role").Preload("Role.Permissions").Find(&user)
+
+	if result.RowsAffected == 0 {
+		return nil, fmt.Errorf("user data not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &user, nil
 }
