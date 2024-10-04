@@ -129,7 +129,10 @@ func (r *userRepository) Count(ctx context.Context, query *model.QueryGet) int64
 		helpers.Search(query, allowedFields),
 	)
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total
 }
@@ -158,7 +161,10 @@ func (r *userRepository) CountUnscoped(ctx context.Context, query *model.QueryGe
 		helpers.Search(query, allowedFields),
 	)
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total
 }
@@ -211,7 +217,10 @@ func (r *userRepository) NameExist(ctx context.Context, user *entity.User) bool 
 		tx = tx.Not("id = ?", user.ID)
 	}
 
-	tx.Count(&totalData)
+	if err := tx.Count(&totalData).Error; err != nil {
+		logData.Err = err
+		logData.Message = "Not Passed"
+	}
 
 	return totalData != 0
 }
@@ -227,7 +236,10 @@ func (r *userRepository) EmailExist(ctx context.Context, user *entity.User) bool
 		tx = tx.Not("id = ?", user.ID)
 	}
 
-	tx.Count(&totalData)
+	if err := tx.Count(&totalData).Error; err != nil {
+		logData.Err = err
+		logData.Message = "Not Passed"
+	}
 	return totalData != 0
 }
 
