@@ -238,11 +238,11 @@ func (s *roleService) DeleteByID(ctx context.Context, id uint) helpers.BaseRespo
 		})
 	}
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Role successfully deleted",
-	}
+	})
 }
 
 func (s *roleService) validateEntityInput(ctx context.Context, role *entity.Role) interface{} {

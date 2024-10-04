@@ -49,7 +49,6 @@ func (h *userHandler) GetUser(c *fiber.Ctx) error {
 			Errors:  err,
 		})
 	} else {
-
 		response = h.service.GetByID(ctx, uint(id))
 		response.Log = &logData
 	}
@@ -113,10 +112,10 @@ func (h *userHandler) CreateUser(c *fiber.Ctx) error {
 				Log:     &logData,
 				Errors:  err,
 			})
+		} else {
+			response = h.service.Create(ctx, &input)
+			response.Log = &logData
 		}
-
-		response = h.service.Create(ctx, &input)
-		response.Log = &logData
 	}
 
 	return helpers.ResponseFormatter(c, response)
@@ -160,10 +159,11 @@ func (h *userHandler) UpdateUser(c *fiber.Ctx) error {
 				Log:     &logData,
 				Errors:  err,
 			})
+		} else {
+			response = h.service.UpdateByID(ctx, &input, uint(id))
+			response.Log = &logData
 		}
 
-		response = h.service.UpdateByID(ctx, &input, uint(id))
-		response.Log = &logData
 	}
 	return helpers.ResponseFormatter(c, response)
 }
@@ -206,10 +206,10 @@ func (h *userHandler) ResetPassword(c *fiber.Ctx) error {
 				Log:     &logData,
 				Errors:  err,
 			}
+		} else {
+			response = h.service.ChangePassByID(ctx, &input, uint(id))
+			response.Log = &logData
 		}
-
-		response = h.service.ChangePassByID(ctx, &input, uint(id))
-		response.Log = &logData
 	}
 
 	return helpers.ResponseFormatter(c, response)
