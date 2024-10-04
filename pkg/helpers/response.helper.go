@@ -83,8 +83,10 @@ func ResponseFormatter(c *fiber.Ctx, res BaseResponse) error {
 	LogSysChannel <- logSysData
 
 	res.Log = nil
-	if res.Status != fiber.StatusBadRequest {
+	if res.Status != fiber.StatusBadRequest ||
+		(res.Message != "Invalid or malformed request query" && res.Message != "Invalid or malformed request body") {
 		res.Errors = nil
 	}
+
 	return c.Status(res.Status).JSON(res)
 }
