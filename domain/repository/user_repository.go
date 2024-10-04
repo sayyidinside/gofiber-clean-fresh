@@ -201,6 +201,9 @@ func (r *userRepository) Delete(ctx context.Context, user *entity.User) error {
 }
 
 func (r *userRepository) NameExist(ctx context.Context, user *entity.User) bool {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var totalData int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("name = ? ", user.Name)
@@ -214,6 +217,9 @@ func (r *userRepository) NameExist(ctx context.Context, user *entity.User) bool 
 }
 
 func (r *userRepository) EmailExist(ctx context.Context, user *entity.User) bool {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var totalData int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("email = ?", user.Email)
@@ -226,6 +232,9 @@ func (r *userRepository) EmailExist(ctx context.Context, user *entity.User) bool
 }
 
 func (r *userRepository) UsernameExist(ctx context.Context, user *entity.User) bool {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var totalData int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("username = ?", user.Username)
@@ -234,5 +243,10 @@ func (r *userRepository) UsernameExist(ctx context.Context, user *entity.User) b
 	}
 
 	tx.Count(&totalData)
+	if err := tx.Error; err != nil {
+		logData.Err = err
+		logData.Message = "Not Passed"
+	}
+
 	return totalData != 0
 }
