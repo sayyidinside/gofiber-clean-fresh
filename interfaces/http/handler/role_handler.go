@@ -36,16 +36,15 @@ func (h *roleHandler) GetRole(c *fiber.Ctx) error {
 	var response helpers.BaseResponse
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
-		response := helpers.LogBaseResponse(&logData, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
 			Log:     &logData,
 			Errors:  err,
 		})
-		return helpers.ResponseFormatter(c, response)
 	} else {
-		response = h.service.GetByID(c.Context(), uint(id))
+		response = h.service.GetByID(ctx, uint(id))
 		response.Log = &logData
 	}
 
@@ -71,7 +70,7 @@ func (h *roleHandler) GetAllRole(c *fiber.Ctx) error {
 	} else {
 		model.SanitizeQueryGet(query)
 		url := c.BaseURL() + c.OriginalURL()
-		response = h.service.GetAll(c.Context(), query, url)
+		response = h.service.GetAll(ctx, query, url)
 		response.Log = &logData
 	}
 
@@ -107,7 +106,7 @@ func (h *roleHandler) CreateRole(c *fiber.Ctx) error {
 				Log:     &logData,
 			}
 		} else {
-			response = h.service.Create(c.Context(), &input)
+			response = h.service.Create(ctx, &input)
 			response.Log = &logData
 		}
 	}
@@ -155,7 +154,7 @@ func (h *roleHandler) UpdateRole(c *fiber.Ctx) error {
 					Log:     &logData,
 				}
 			} else {
-				response = h.service.UpdateByID(c.Context(), &input, uint(id))
+				response = h.service.UpdateByID(ctx, &input, uint(id))
 				response.Log = &logData
 			}
 		}
@@ -182,7 +181,7 @@ func (h *roleHandler) DeleteRole(c *fiber.Ctx) error {
 			Errors:  err,
 		}
 	} else {
-		response = h.service.DeleteByID(c.Context(), uint(id))
+		response = h.service.DeleteByID(ctx, uint(id))
 		response.Log = &logData
 	}
 
