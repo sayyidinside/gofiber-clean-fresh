@@ -31,33 +31,41 @@ func NewRoleService(repository repository.RoleRepository, permissionRepo reposit
 }
 
 func (s *roleService) GetByID(ctx context.Context, id uint) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	role, err := s.repository.FindByID(ctx, id)
 	if role == nil || err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
 			Message: "Role not found",
-		}
+			Errors:  err,
+		})
 	}
 
 	roleModel := model.RoleToDetailModel(role)
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Role data found",
 		Data:    roleModel,
-	}
+	})
 }
 
 func (s *roleService) GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	roles, err := s.repository.FindAll(ctx, query)
 	if roles == nil || err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
 			Message: "Role not found",
-		}
+			Errors:  err,
+		})
 	}
 
 	roleModels := model.RoleToListModels(roles)
@@ -66,7 +74,7 @@ func (s *roleService) GetAll(ctx context.Context, query *model.QueryGet, url str
 
 	pagination := helpers.GeneratePaginationMetadata(query, url, totalData)
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Role data found",
@@ -74,49 +82,56 @@ func (s *roleService) GetAll(ctx context.Context, query *model.QueryGet, url str
 		Meta: &helpers.Meta{
 			Pagination: pagination,
 		},
-	}
+	})
 }
 
 func (s *roleService) Create(ctx context.Context, input *model.RoleInput) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	roleEntity := model.RoleInputToEntity(input)
 
 	if err := s.validateEntityInput(ctx, roleEntity); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
 			Errors:  err,
-		}
+		})
 	}
 
 	permissions, err := s.permissionRepo.FindInID(ctx, input.Permissions)
 	if err != nil || len(*permissions) == 0 {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Permission data not found",
 			Errors:  err,
-		}
+		})
 	}
 
 	roleEntity.Permissions = permissions
 
 	if err := s.repository.Insert(ctx, roleEntity); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error creating data",
-		}
+			Errors:  err,
+		})
 	}
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusCreated,
 		Success: true,
 		Message: "Role successfully created",
-	}
+	})
 }
 
 func (s *roleService) UpdateByID(ctx context.Context, input *model.RoleInput, id uint) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	// Start a new transaction
 	tx := s.repository.BeginTransaction(ctx)
 
@@ -124,21 +139,23 @@ func (s *roleService) UpdateByID(ctx context.Context, input *model.RoleInput, id
 	role, err := s.repository.FindByID(ctx, id)
 	if role == nil || err != nil {
 		tx.Rollback() // Rollback on error
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
 			Message: "Role not found",
-		}
+			Errors:  err,
+		})
 	}
 
 	roleEntity := model.RoleInputToEntity(input)
 	if roleEntity == nil {
 		tx.Rollback() // Rollback on error
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error parsing model",
-		}
+			Errors:  err,
+		})
 	}
 
 	roleEntity.ID = id
@@ -146,72 +163,79 @@ func (s *roleService) UpdateByID(ctx context.Context, input *model.RoleInput, id
 	// Retrieve permissions
 	permissions, err := s.permissionRepo.FindInID(ctx, input.Permissions)
 	if err != nil || len(*permissions) == 0 {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Permission data not found",
 			Errors:  err,
-		}
+		})
 	}
 
 	// Validate the entity
 	if err := s.validateEntityInput(ctx, roleEntity); err != nil {
 		tx.Rollback() // Rollback on error
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
 			Errors:  err,
-		}
+		})
 	}
 
 	// Update role entity in the database
 	if err := s.repository.UpdateWithTransaction(ctx, tx, roleEntity); err != nil {
 		tx.Rollback() // Rollback on error
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error updating data",
-		}
+			Errors:  err,
+		})
 	}
 
 	// Replace permissions in the database
 	if err := s.repository.ReplacePermissionsWithTransaction(ctx, tx, roleEntity, permissions); err != nil {
 		tx.Rollback() // Rollback on error
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error replacing role permissions data",
-		}
+			Errors:  err,
+		})
 	}
 
 	// Commit the transaction if all operations succeed
 	tx.Commit()
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "Role successfully updated",
-	}
+	})
 }
 
 func (s *roleService) DeleteByID(ctx context.Context, id uint) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	// Check modul existence
 	role, err := s.repository.FindByID(ctx, id)
 	if role == nil || err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
 			Message: "Role not found",
-		}
+			Errors:  err,
+		})
 	}
 
 	if err := s.repository.Delete(ctx, role); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error deleting data",
-		}
+			Errors:  err,
+		})
 	}
 
 	return helpers.BaseResponse{
@@ -222,6 +246,9 @@ func (s *roleService) DeleteByID(ctx context.Context, id uint) helpers.BaseRespo
 }
 
 func (s *roleService) validateEntityInput(ctx context.Context, role *entity.Role) interface{} {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	errs := []helpers.ValidationError{}
 
 	// Check name duplication
@@ -233,6 +260,8 @@ func (s *roleService) validateEntityInput(ctx context.Context, role *entity.Role
 	}
 
 	if len(errs) != 0 {
+		logData.Message = "Validation error"
+		logData.Err = errs
 		return errs
 	}
 
