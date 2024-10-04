@@ -32,12 +32,17 @@ func NewPermissionRepository(db *gorm.DB) PermissionRepository {
 }
 
 func (r *permissionRepository) FindByID(ctx context.Context, id uint) (*entity.Permission, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var permission entity.Permission
 	if result := r.DB.WithContext(ctx).Limit(1).Where("id = ?", id).
 		Preload("Module", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name").Unscoped()
 		}).
 		Find(&permission); result.Error != nil || result.RowsAffected == 0 {
+		logData.Message = "Not Passed"
+		logData.Err = result.Error
 		return nil, result.Error
 	}
 
@@ -45,12 +50,17 @@ func (r *permissionRepository) FindByID(ctx context.Context, id uint) (*entity.P
 }
 
 func (r *permissionRepository) FindByUUID(ctx context.Context, uuid uuid.UUID) (*entity.Permission, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var permission entity.Permission
 	if result := r.DB.WithContext(ctx).Limit(1).Where("uuid = ?", uuid).
 		Preload("Module", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name").Unscoped()
 		}).
 		Find(&permission); result.Error != nil || result.RowsAffected == 0 {
+		logData.Message = "Not Passed"
+		logData.Err = result.Error
 		return nil, result.Error
 	}
 
@@ -58,6 +68,9 @@ func (r *permissionRepository) FindByUUID(ctx context.Context, uuid uuid.UUID) (
 }
 
 func (r *permissionRepository) FindAll(ctx context.Context, query *model.QueryGet) (*[]entity.Permission, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var permissions []entity.Permission
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Permission{}).
@@ -84,6 +97,8 @@ func (r *permissionRepository) FindAll(ctx context.Context, query *model.QueryGe
 	)
 
 	if err := tx.Find(&permissions).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
 		return nil, err
 	}
 
@@ -91,9 +106,14 @@ func (r *permissionRepository) FindAll(ctx context.Context, query *model.QueryGe
 }
 
 func (r *permissionRepository) FindInID(ctx context.Context, ids []uint) (*[]entity.Permission, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var permissions []entity.Permission
 
 	if err := r.DB.WithContext(ctx).Model(&entity.Permission{}).Select("id", "name", "module_id").Where("id IN ?", ids).Find(&permissions).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
 		return nil, err
 	}
 
@@ -101,6 +121,9 @@ func (r *permissionRepository) FindInID(ctx context.Context, ids []uint) (*[]ent
 }
 
 func (r *permissionRepository) Count(ctx context.Context, query *model.QueryGet) int64 {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Permission{}).
@@ -123,12 +146,18 @@ func (r *permissionRepository) Count(ctx context.Context, query *model.QueryGet)
 		helpers.Search(query, allowedFields),
 	)
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total
 }
 
 func (r *permissionRepository) CountUnscoped(ctx context.Context, query *model.QueryGet) int64 {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Permission{}).Unscoped().
@@ -151,24 +180,51 @@ func (r *permissionRepository) CountUnscoped(ctx context.Context, query *model.Q
 		helpers.Search(query, allowedFields),
 	)
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total
 }
 
 func (r *permissionRepository) Insert(ctx context.Context, permission *entity.Permission) error {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	return r.DB.WithContext(ctx).Create(permission).Error
 }
 
 func (r *permissionRepository) Update(ctx context.Context, permission *entity.Permission) error {
-	return r.DB.WithContext(ctx).Where("id = ?", permission.ID).Updates(permission).Error
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := r.DB.WithContext(ctx).Where("id = ?", permission.ID).Updates(permission).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+
+	return nil
 }
 
 func (r *permissionRepository) Delete(ctx context.Context, permission *entity.Permission) error {
-	return r.DB.WithContext(ctx).Delete(permission).Error
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := r.DB.WithContext(ctx).Delete(permission).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+
+	return nil
 }
 
 func (r *permissionRepository) NameExist(ctx context.Context, permission *entity.Permission) bool {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var totalData int64
 	tx := r.DB.WithContext(ctx).Model(&entity.Permission{}).Where("name = ? AND module_id = ?", permission.Name, permission.ModuleID)
 
@@ -176,7 +232,10 @@ func (r *permissionRepository) NameExist(ctx context.Context, permission *entity
 		tx = tx.Not("id = ?", permission.ID)
 	}
 
-	tx.Count(&totalData)
+	if err := tx.Count(&totalData).Error; err != nil {
+		logData.Err = err
+		logData.Message = "Not Passed"
+	}
 
 	return totalData != 0
 }
