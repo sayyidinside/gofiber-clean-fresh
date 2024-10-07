@@ -39,55 +39,61 @@ func (s *userService) GetByID(ctx context.Context, id uint) helpers.BaseResponse
 
 	user, err := s.repository.FindByID(ctx, id)
 	if user == nil || err != nil {
-		logData.Message = "User Not Found"
-		logData.Err = err
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
-			Message: logData.Message,
-			Errors:  logData.Err,
-		}
+			Message: "User Not Found",
+			Errors:  err,
+		})
 	}
 
 	// convert entity to model data
 	userModel := model.UserToDetailModel(user)
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User data found",
 		Data:    userModel,
-	}
+	})
 }
 
 func (s *userService) GetByUUID(ctx context.Context, uuid uuid.UUID) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	user, err := s.repository.FindByUUID(ctx, uuid)
 	if user == nil || err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
-			Message: "User data not found",
-		}
+			Message: "User Not Found",
+			Errors:  err,
+		})
 	}
 
 	userModel := model.UserToDetailModel(user)
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User data found",
 		Data:    userModel,
-	}
+	})
 }
 
 func (s *userService) GetAll(ctx context.Context, query *model.QueryGet, url string) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	users, err := s.repository.FindAll(ctx, query)
 	if users == nil || err != nil {
-		return helpers.BaseResponse{
-			Status:  fiber.StatusOK,
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
+			Status:  fiber.StatusNotFound,
 			Success: false,
-			Message: "User not found",
-		}
+			Message: "User Not Found",
+			Errors:  err,
+		})
 	}
 
 	userModels := model.UserToListModel(users)
@@ -95,7 +101,7 @@ func (s *userService) GetAll(ctx context.Context, query *model.QueryGet, url str
 	totalData := s.repository.Count(ctx, query)
 	pagination := helpers.GeneratePaginationMetadata(query, url, totalData)
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User data found",
@@ -103,151 +109,171 @@ func (s *userService) GetAll(ctx context.Context, query *model.QueryGet, url str
 		Meta: &helpers.Meta{
 			Pagination: pagination,
 		},
-	}
+	})
 }
 
 func (s *userService) Create(ctx context.Context, input *model.UserInput) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	userEntity := model.UserInputToEntity(input)
 
 	if userEntity == nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error parsing model",
-		}
+		})
 	}
 
 	if err := s.ValidateEntityInput(ctx, userEntity); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "invalid or malformed request body",
 			Errors:  err,
-		}
+		})
 	}
 
 	if err := s.repository.Insert(ctx, userEntity); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error creating data",
-		}
+			Errors:  logData.Err,
+		})
 	}
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusCreated,
 		Success: true,
 		Message: "User successfully created",
-	}
+	})
 
 }
 
 func (s *userService) UpdateByID(ctx context.Context, input *model.UserUpdateInput, id uint) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	if user, err := s.repository.FindByID(ctx, id); user == nil || err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
 			Message: "User not found",
-		}
+			Errors:  err,
+		})
 	}
 
 	userEntity := model.UserUpdateInputToEntity(input)
 	if userEntity == nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
-			Message: "Error parsing to model",
-		}
+			Message: "Error parsing model",
+		})
 	}
 
 	userEntity.ID = id
 
 	if err := s.ValidateEntityInput(ctx, userEntity); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: "Invalid or malformed request body",
+			Message: "invalid or malformed request body",
 			Errors:  err,
-		}
+		})
 	}
 
 	if err := s.repository.Update(ctx, userEntity); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error updating data",
 			Errors:  err,
-		}
+		})
 	}
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User successfully updated",
-	}
+	})
 }
 
 func (s *userService) ChangePassByID(ctx context.Context, input *model.ChangePasswordInput, id uint) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	if user, err := s.repository.FindByID(ctx, id); user == nil || err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
 			Message: "User not found",
-		}
+			Errors:  err,
+		})
 	}
 
 	userEntity := model.ChangePasswordToEntity(input)
 	if userEntity == nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
-			Message: "Error parsing to model",
-		}
+			Message: "Error parsing model",
+		})
 	}
 
 	userEntity.ID = id
 	if err := s.repository.Update(ctx, userEntity); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error updating data",
 			Errors:  err,
-		}
+		})
 	}
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User password successfully updated",
-	}
+	})
 }
 
 func (s *userService) DeleteByID(ctx context.Context, id uint) helpers.BaseResponse {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	user, err := s.repository.FindByID(ctx, id)
 	if err != nil || user == nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusNotFound,
 			Success: false,
 			Message: "User not found",
-		}
+			Errors:  err,
+		})
 	}
 
 	if err := s.repository.Delete(ctx, user); err != nil {
-		return helpers.BaseResponse{
+		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
 			Success: false,
 			Message: "Error deleting data",
-		}
+			Errors:  err,
+		})
 	}
 
-	return helpers.BaseResponse{
+	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 		Status:  fiber.StatusOK,
 		Success: true,
 		Message: "User successfully deleted",
-	}
+	})
 }
 
 func (s *userService) ValidateEntityInput(ctx context.Context, user *entity.User) interface{} {
+	logData := helpers.CreateLog(s)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	errors := []helpers.ValidationError{}
 
 	if role, err := s.roleRepository.FindByID(ctx, user.RoleID); role == nil || err != nil {
@@ -279,6 +305,8 @@ func (s *userService) ValidateEntityInput(ctx context.Context, user *entity.User
 	}
 
 	if len(errors) > 0 {
+		logData.Message = "Validation error"
+		logData.Err = errors
 		return errors
 	}
 	return nil

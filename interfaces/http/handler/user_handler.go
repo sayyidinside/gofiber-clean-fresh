@@ -38,176 +38,203 @@ func (h *userHandler) GetUser(c *fiber.Ctx) error {
 	// Simulate delay
 	// time.Sleep(100 * time.Millisecond)
 
+	var response helpers.BaseResponse
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
-		logData.Message = "Invalid ID Format"
-		logData.Err = err
-		// helpers.CreateLogSystem23(ctx, logData)
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
-			Message: logData.Message,
+			Message: "Invalid ID Format",
 			Log:     &logData,
+			Errors:  err,
 		})
+	} else {
+		response = h.service.GetByID(ctx, uint(id))
+		response.Log = &logData
 	}
-
-	response := h.service.GetByID(ctx, uint(id))
-	response.Log = &logData
-
-	// helpers.CreateLogSystem23(ctx, logData)
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *userHandler) GetAllUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	var response helpers.BaseResponse
 	query := new(model.QueryGet)
 
 	if err := c.QueryParser(query); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request query",
 			Log:     &logData,
+			Errors:  err,
 		})
+	} else {
+		model.SanitizeQueryGet(query)
+
+		url := c.BaseURL() + c.OriginalURL()
+		response = h.service.GetAll(ctx, query, url)
+		response.Log = &logData
 	}
-
-	model.SanitizeQueryGet(query)
-
-	url := c.BaseURL() + c.OriginalURL()
-	response := h.service.GetAll(c.Context(), query, url)
-	response.Log = &logData
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *userHandler) CreateUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var input model.UserInput
+	var response helpers.BaseResponse
 
 	if err := c.BodyParser(&input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
 			Log:     &logData,
-		})
-	}
-
-	model.SanitizeUserInput(&input)
-
-	if err := helpers.ValidateInput(input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
-			Status:  fiber.StatusBadRequest,
-			Success: false,
-			Message: "Invalid or malformed request body",
 			Errors:  err,
-			Log:     &logData,
 		})
-	}
+	} else {
+		model.SanitizeUserInput(&input)
 
-	response := h.service.Create(c.Context(), &input)
-	response.Log = &logData
+		if err := helpers.ValidateInput(input); err != nil {
+			response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
+				Status:  fiber.StatusBadRequest,
+				Success: false,
+				Message: "Invalid or malformed request body",
+				Log:     &logData,
+				Errors:  err,
+			})
+		} else {
+			response = h.service.Create(ctx, &input)
+			response.Log = &logData
+		}
+	}
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *userHandler) UpdateUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+	var response helpers.BaseResponse
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
 	var input model.UserUpdateInput
 	if err := c.BodyParser(&input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
 			Log:     &logData,
-		})
-	}
-
-	model.SanitizeUserUpdateInput(&input)
-
-	if err := helpers.ValidateInput(input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
-			Status:  fiber.StatusBadRequest,
-			Success: false,
-			Message: "Invalid or malformed request body",
 			Errors:  err,
-			Log:     &logData,
 		})
+	} else {
+		model.SanitizeUserUpdateInput(&input)
+
+		if err := helpers.ValidateInput(input); err != nil {
+			response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
+				Status:  fiber.StatusBadRequest,
+				Success: false,
+				Message: "Invalid or malformed request body",
+				Log:     &logData,
+				Errors:  err,
+			})
+		} else {
+			response = h.service.UpdateByID(ctx, &input, uint(id))
+			response.Log = &logData
+		}
+
 	}
-
-	response := h.service.UpdateByID(c.Context(), &input, uint(id))
-	response.Log = &logData
-
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *userHandler) ResetPassword(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+	var response helpers.BaseResponse
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
 			Log:     &logData,
+			Errors:  err,
 		})
 	}
 
 	var input model.ChangePasswordInput
 	if err := c.BodyParser(&input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
 			Log:     &logData,
-		})
-	}
-
-	model.SanitizeChangePasswordInput(&input)
-
-	if err := helpers.ValidateInput(input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
-			Status:  fiber.StatusBadRequest,
-			Success: false,
-			Message: "Invalid or malformed request body",
 			Errors:  err,
-			Log:     &logData,
-		})
-	}
+		}
+	} else {
+		model.SanitizeChangePasswordInput(&input)
 
-	response := h.service.ChangePassByID(c.Context(), &input, uint(id))
-	response.Log = &logData
+		if err := helpers.ValidateInput(input); err != nil {
+			response = helpers.BaseResponse{
+				Status:  fiber.StatusBadRequest,
+				Success: false,
+				Message: "Invalid or malformed request body",
+				Log:     &logData,
+				Errors:  err,
+			}
+		} else {
+			response = h.service.ChangePassByID(ctx, &input, uint(id))
+			response.Log = &logData
+		}
+	}
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *userHandler) DeleteUser(c *fiber.Ctx) error {
-	logData := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+	var response helpers.BaseResponse
 
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
+			Log:     &logData,
+			Errors:  err,
 		})
+	} else {
+		response = h.service.DeleteByID(ctx, uint(id))
+		response.Log = &logData
 	}
-
-	response := h.service.DeleteByID(c.Context(), uint(id))
-	response.Log = &logData
 
 	return helpers.ResponseFormatter(c, response)
 }

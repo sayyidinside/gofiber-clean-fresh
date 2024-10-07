@@ -28,133 +28,162 @@ func NewRoleHandler(service service.RoleService) RoleHandler {
 }
 
 func (h *roleHandler) GetRole(c *fiber.Ctx) error {
-	log := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
 
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	var response helpers.BaseResponse
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
-			Log:     &log,
+			Log:     &logData,
+			Errors:  err,
 		})
+	} else {
+		response = h.service.GetByID(ctx, uint(id))
+		response.Log = &logData
 	}
-
-	response := h.service.GetByID(c.Context(), uint(id))
-	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }
-
 func (h *roleHandler) GetAllRole(c *fiber.Ctx) error {
-	log := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
 
 	query := new(model.QueryGet)
+	var response helpers.BaseResponse
+
 	if err := c.QueryParser(query); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request query",
-			Log:     &log,
-		})
+			Log:     &logData,
+			Errors:  err,
+		}
+	} else {
+		model.SanitizeQueryGet(query)
+		url := c.BaseURL() + c.OriginalURL()
+		response = h.service.GetAll(ctx, query, url)
+		response.Log = &logData
 	}
-
-	model.SanitizeQueryGet(query)
-
-	url := c.BaseURL() + c.OriginalURL()
-	response := h.service.GetAll(c.Context(), query, url)
-	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *roleHandler) CreateRole(c *fiber.Ctx) error {
-	log := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var input model.RoleInput
+	var response helpers.BaseResponse
 
 	if err := c.BodyParser(&input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid or malformed request body",
-			Log:     &log,
-		})
+			Log:     &logData,
+			Errors:  err,
+		}
+	} else {
+		model.SanitizeRoleInput(&input)
+
+		if err := helpers.ValidateInput(input); err != nil {
+			response = helpers.BaseResponse{
+				Status:  fiber.StatusBadRequest,
+				Success: false,
+				Message: "Invalid or malformed request body",
+				Errors:  err,
+				Log:     &logData,
+			}
+		} else {
+			response = h.service.Create(ctx, &input)
+			response.Log = &logData
+		}
 	}
-
-	model.SanitizeRoleInput(&input)
-
-	if err := helpers.ValidateInput(input); err != nil {
-		iError := interface{}(err)
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
-			Status:  fiber.StatusBadRequest,
-			Success: false,
-			Message: "Invalid or malformed request body",
-			Errors:  &iError,
-			Log:     &log,
-		})
-	}
-
-	response := h.service.Create(c.Context(), &input)
-	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *roleHandler) UpdateRole(c *fiber.Ctx) error {
-	log := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	var response helpers.BaseResponse
+
 	if err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
-			Log:     &log,
-		})
-	}
-
-	var input model.RoleInput
-
-	if err := c.BodyParser(&input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
-			Status:  fiber.StatusBadRequest,
-			Success: false,
-			Message: "Invalid or malformed request body",
-			Log:     &log,
-		})
-	}
-
-	model.SanitizeRoleInput(&input)
-
-	if err := helpers.ValidateInput(input); err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
-			Status:  fiber.StatusBadRequest,
-			Success: false,
-			Message: "Invalid or malformed request body",
+			Log:     &logData,
 			Errors:  err,
-			Log:     &log,
-		})
-	}
+		}
+	} else {
+		var input model.RoleInput
 
-	response := h.service.UpdateByID(c.Context(), &input, uint(id))
-	response.Log = &log
+		if err := c.BodyParser(&input); err != nil {
+			response = helpers.BaseResponse{
+				Status:  fiber.StatusBadRequest,
+				Success: false,
+				Message: "Invalid or malformed request body",
+				Log:     &logData,
+				Errors:  err,
+			}
+		} else {
+			model.SanitizeRoleInput(&input)
+
+			if err := helpers.ValidateInput(input); err != nil {
+				response = helpers.BaseResponse{
+					Status:  fiber.StatusBadRequest,
+					Success: false,
+					Message: "Invalid or malformed request body",
+					Errors:  err,
+					Log:     &logData,
+				}
+			} else {
+				response = h.service.UpdateByID(ctx, &input, uint(id))
+				response.Log = &logData
+			}
+		}
+	}
 
 	return helpers.ResponseFormatter(c, response)
 }
 
 func (h *roleHandler) DeleteRole(c *fiber.Ctx) error {
-	log := helpers.CreateLog(c)
+	ctx := helpers.ExtractIdentifierAndUsername(c)
+	logData := helpers.CreateLog(h)
+
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	var response helpers.BaseResponse
+
 	if err != nil {
-		return helpers.ResponseFormatter(c, helpers.BaseResponse{
+		response = helpers.BaseResponse{
 			Status:  fiber.StatusBadRequest,
 			Success: false,
 			Message: "Invalid ID format",
-			Log:     &log,
-		})
+			Log:     &logData,
+			Errors:  err,
+		}
+	} else {
+		response = h.service.DeleteByID(ctx, uint(id))
+		response.Log = &logData
 	}
-
-	response := h.service.DeleteByID(c.Context(), uint(id))
-	response.Log = &log
 
 	return helpers.ResponseFormatter(c, response)
 }

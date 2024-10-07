@@ -32,12 +32,17 @@ func NewModuleRepository(db *gorm.DB) ModuleRepository {
 }
 
 func (r *moduleRepository) FindByID(ctx context.Context, id uint) (*entity.Module, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var module entity.Module
 	if result := r.DB.WithContext(ctx).Limit(1).Where("id = ?", id).
 		Preload("Permissions", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name", "uuid", "module_id")
 		}).
 		Find(&module); result.Error != nil || result.RowsAffected == 0 {
+		logData.Message = "Not Passed"
+		logData.Err = result.Error
 		return nil, result.Error
 	}
 
@@ -45,6 +50,9 @@ func (r *moduleRepository) FindByID(ctx context.Context, id uint) (*entity.Modul
 }
 
 func (r *moduleRepository) FindByIDUnscoped(ctx context.Context, id uint) (*entity.Module, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var module entity.Module
 	if err := r.DB.WithContext(ctx).Limit(1).Where("id = ?", id).Unscoped().
 		Preload("Permissions", func(db *gorm.DB) *gorm.DB {
@@ -58,12 +66,17 @@ func (r *moduleRepository) FindByIDUnscoped(ctx context.Context, id uint) (*enti
 }
 
 func (r *moduleRepository) FindByUUID(ctx context.Context, uuid uuid.UUID) (*entity.Module, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var module entity.Module
 	if err := r.DB.Limit(1).Where("uuid = ?", uuid).
 		Preload("Permissions", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name", "module_id").Unscoped()
 		}).
 		Find(&module).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
 		return nil, err
 	}
 
@@ -71,6 +84,9 @@ func (r *moduleRepository) FindByUUID(ctx context.Context, uuid uuid.UUID) (*ent
 }
 
 func (r *moduleRepository) FindAll(ctx context.Context, query *model.QueryGet) (*[]entity.Module, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var modules []entity.Module
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Module{})
@@ -91,6 +107,8 @@ func (r *moduleRepository) FindAll(ctx context.Context, query *model.QueryGet) (
 	)
 
 	if err := tx.Find(&modules).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
 		return nil, err
 	}
 
@@ -98,6 +116,9 @@ func (r *moduleRepository) FindAll(ctx context.Context, query *model.QueryGet) (
 }
 
 func (r *moduleRepository) Count(ctx context.Context, query *model.QueryGet) int64 {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Module{})
@@ -117,12 +138,18 @@ func (r *moduleRepository) Count(ctx context.Context, query *model.QueryGet) int
 		helpers.Search(query, allowedFields),
 	)
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total
 }
 
 func (r *moduleRepository) CountUnscoped(ctx context.Context, query *model.QueryGet) int64 {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Module{}).Unscoped()
@@ -142,24 +169,57 @@ func (r *moduleRepository) CountUnscoped(ctx context.Context, query *model.Query
 		helpers.Search(query, allowedFields),
 	)
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total
 }
 
 func (r *moduleRepository) Insert(ctx context.Context, module *entity.Module) error {
-	return r.DB.WithContext(ctx).Create(module).Error
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := r.DB.WithContext(ctx).Create(module).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+
+	return nil
 }
 
 func (r *moduleRepository) Update(ctx context.Context, module *entity.Module) error {
-	return r.DB.WithContext(ctx).Where("id = ?", module.ID).Updates(module).Error
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := r.DB.WithContext(ctx).Where("id = ?", module.ID).Updates(module).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+
+	return nil
 }
 
 func (r *moduleRepository) Delete(ctx context.Context, module *entity.Module) error {
-	return r.DB.WithContext(ctx).Delete(module).Error
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := r.DB.WithContext(ctx).Delete(module).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+
+	return nil
 }
 
 func (r *moduleRepository) NameExist(ctx context.Context, module *entity.Module) bool {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Module{}).Where("name = ?", module.Name)
@@ -168,7 +228,10 @@ func (r *moduleRepository) NameExist(ctx context.Context, module *entity.Module)
 		tx = tx.Not("id = ?", module.ID)
 	}
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total != 0
 }
