@@ -3,17 +3,57 @@ package users
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
 )
 
 func RegisterRoleRoutes(route fiber.Router, handler handler.RoleHandler) {
-	user := route.Group("/roles")
+	role := route.Group("/roles")
 
-	user.Get("/:id", handler.GetRole)
-	user.Get("/", handler.GetAllRole)
+	role.Use(middleware.Authentication())
 
-	user.Post("", handler.CreateRole)
+	role.Get(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"View Role",
+			"Create Role",
+			"Update Role",
+			"Delete Role",
+		}),
+		handler.GetRole,
+	)
 
-	user.Put("/:id", handler.UpdateRole)
+	role.Get(
+		"/",
+		middleware.Authorization(false, false, []string{
+			"View Role",
+			"Create Role",
+			"Update Role",
+			"Delete Role",
+		}),
+		handler.GetAllRole,
+	)
 
-	user.Delete("/:id", handler.DeleteRole)
+	role.Post(
+		"",
+		middleware.Authorization(false, false, []string{
+			"Create Role",
+		}),
+		handler.CreateRole,
+	)
+
+	role.Put(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"Update Role",
+		}),
+		handler.UpdateRole,
+	)
+
+	role.Delete(
+		"/:id",
+		middleware.Authorization(false, false, []string{
+			"Delete Role",
+		}),
+		handler.DeleteRole,
+	)
 }

@@ -3,14 +3,41 @@ package users
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
+	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
 )
 
 func RegisterModuleRoutes(route fiber.Router, handler handler.ModuleHandler) {
-	user := route.Group("/modules")
+	modules := route.Group("/modules")
 
-	user.Get("/", handler.GetAllModule)
-	user.Get("/:id", handler.GetModule)
-	user.Post("", handler.CreateModule)
-	user.Put("/:id", handler.UpdateModule)
-	user.Delete("/:id", handler.DeleteModule)
+	modules.Use(middleware.Authentication())
+
+	modules.Get(
+		"/",
+		middleware.Authorization(true, true, []string{}),
+		handler.GetAllModule,
+	)
+
+	modules.Get(
+		"/:id",
+		middleware.Authorization(true, true, []string{}),
+		handler.GetModule,
+	)
+
+	modules.Post(
+		"",
+		middleware.Authorization(true, true, []string{}),
+		handler.CreateModule,
+	)
+
+	modules.Put(
+		"/:id",
+		middleware.Authorization(true, true, []string{}),
+		handler.UpdateModule,
+	)
+
+	modules.Delete(
+		"/:id",
+		middleware.Authorization(true, true, []string{}),
+		handler.DeleteModule,
+	)
 }
