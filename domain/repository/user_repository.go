@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
@@ -49,10 +48,7 @@ func (r *userRepository) FindByID(ctx context.Context, id uint) (*entity.User, e
 		}).
 		Find(&user)
 
-	// Pengecekan error
 	if result.Error != nil || result.RowsAffected == 0 {
-		// Perbarui logData sebelum return
-		log.Println("// Perbarui logData sebelum return")
 		logData.Message = "Not Passed"
 		logData.Err = result.Error
 		return nil, result.Error
@@ -62,12 +58,17 @@ func (r *userRepository) FindByID(ctx context.Context, id uint) (*entity.User, e
 }
 
 func (r *userRepository) FindByUUID(ctx context.Context, uuid uuid.UUID) (*entity.User, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var user entity.User
 	if result := r.DB.WithContext(ctx).Limit(1).Where("uuid = ?", uuid).
 		Preload("Role", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name").Unscoped()
 		}).
 		Find(&user); result.Error != nil || result.RowsAffected == 0 {
+		logData.Message = "Not Passed"
+		logData.Err = result.Error
 		return nil, result.Error
 	}
 
@@ -75,6 +76,9 @@ func (r *userRepository) FindByUUID(ctx context.Context, uuid uuid.UUID) (*entit
 }
 
 func (r *userRepository) FindAll(ctx context.Context, query *model.QueryGet) (*[]entity.User, error) {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var users []entity.User
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).
 		Preload("Role", func(db *gorm.DB) *gorm.DB {
@@ -95,6 +99,8 @@ func (r *userRepository) FindAll(ctx context.Context, query *model.QueryGet) (*[
 	)
 
 	if err := tx.Find(&users).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
 		return nil, err
 	}
 
@@ -102,6 +108,9 @@ func (r *userRepository) FindAll(ctx context.Context, query *model.QueryGet) (*[
 }
 
 func (r *userRepository) Count(ctx context.Context, query *model.QueryGet) int64 {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).
@@ -122,12 +131,18 @@ func (r *userRepository) Count(ctx context.Context, query *model.QueryGet) int64
 		helpers.Search(query, allowedFields),
 	)
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total
 }
 
 func (r *userRepository) CountUnscoped(ctx context.Context, query *model.QueryGet) int64 {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).
@@ -148,24 +163,55 @@ func (r *userRepository) CountUnscoped(ctx context.Context, query *model.QueryGe
 		helpers.Search(query, allowedFields),
 	)
 
-	tx.Count(&total)
+	if err := tx.Count(&total).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+	}
 
 	return total
 }
 
 func (r *userRepository) Insert(ctx context.Context, user *entity.User) error {
-	return r.DB.WithContext(ctx).Create(user).Error
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := r.DB.WithContext(ctx).Create(user).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+	return nil
 }
 
 func (r *userRepository) Update(ctx context.Context, user *entity.User) error {
-	return r.DB.WithContext(ctx).Where("id = ?", user.ID).Updates(user).Error
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := r.DB.WithContext(ctx).Where("id = ?", user.ID).Updates(user).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+	return nil
 }
 
 func (r *userRepository) Delete(ctx context.Context, user *entity.User) error {
-	return r.DB.WithContext(ctx).Delete(user).Error
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := r.DB.WithContext(ctx).Delete(user).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+
+	return nil
 }
 
 func (r *userRepository) NameExist(ctx context.Context, user *entity.User) bool {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var totalData int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("name = ? ", user.Name)
@@ -173,12 +219,18 @@ func (r *userRepository) NameExist(ctx context.Context, user *entity.User) bool 
 		tx = tx.Not("id = ?", user.ID)
 	}
 
-	tx.Count(&totalData)
+	if err := tx.Count(&totalData).Error; err != nil {
+		logData.Err = err
+		logData.Message = "Not Passed"
+	}
 
 	return totalData != 0
 }
 
 func (r *userRepository) EmailExist(ctx context.Context, user *entity.User) bool {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var totalData int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("email = ?", user.Email)
@@ -186,11 +238,17 @@ func (r *userRepository) EmailExist(ctx context.Context, user *entity.User) bool
 		tx = tx.Not("id = ?", user.ID)
 	}
 
-	tx.Count(&totalData)
+	if err := tx.Count(&totalData).Error; err != nil {
+		logData.Err = err
+		logData.Message = "Not Passed"
+	}
 	return totalData != 0
 }
 
 func (r *userRepository) UsernameExist(ctx context.Context, user *entity.User) bool {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
 	var totalData int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("username = ?", user.Username)
@@ -199,6 +257,11 @@ func (r *userRepository) UsernameExist(ctx context.Context, user *entity.User) b
 	}
 
 	tx.Count(&totalData)
+	if err := tx.Error; err != nil {
+		logData.Err = err
+		logData.Message = "Not Passed"
+	}
+
 	return totalData != 0
 }
 

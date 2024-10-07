@@ -514,3 +514,9 @@ func LogSystemWithDefer(ctx context.Context, logData *Log) func() {
 		CreateLogSystem23(ctx, logData)
 	}
 }
+
+func LogBaseResponse(logData *Log, response BaseResponse) BaseResponse {
+	logData.Message = response.Message
+	logData.Err = response.Errors
+	return response
+}
