@@ -412,7 +412,7 @@ func seedingRoleAdmin(tx *gorm.DB) error {
 	tx.Model(&entity.Permission{}).Find(&permissions)
 
 	// Append all permissions to many to many table "role_permissions"
-	tx.Model(&adminRole).Association("Permissions").Append(&permissions)
+	tx.Model(&adminRole).Association("permissions").Append(&permissions)
 
 	return nil
 }
