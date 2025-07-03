@@ -53,7 +53,7 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/your-org/gofiber-clean-fresh.git
+git clone https://github.com/sayyidinside/gofiber-clean-fresh.git
 cd gofiber-clean-fresh
 ```
 
