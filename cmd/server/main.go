@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -11,6 +12,7 @@ import (
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/redis"
+	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/shutdown"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
@@ -47,5 +49,13 @@ func main() {
 
 	app.Use(helpers.NotFoundHelper)
 
-	app.Listen(fmt.Sprintf(":%s", config.AppConfig.Port))
+	shutdownHandler := shutdown.NewHandler(app, db, redisClient).WithTimeout(30 * time.Second)
+
+	go func() {
+		if err := app.Listen(fmt.Sprintf(":%s", config.AppConfig.Port)); err != nil {
+			log.Panic(err)
+		}
+	}()
+
+	shutdownHandler.Listen()
 }
