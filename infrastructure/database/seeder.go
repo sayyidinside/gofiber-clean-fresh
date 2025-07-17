@@ -75,7 +75,7 @@ func Seeding(db *gorm.DB) {
 
 	{ // Seeding user admin
 		var totalAdmin int64
-		tx.Model(&user.User{}).Where("name = ? AND email = ?", "Admin", "admin@jxboard.id").Count(&totalAdmin)
+		tx.Model(&user.User{}).Where("name = ? AND email = ?", "Admin", "admin@email.id").Count(&totalAdmin)
 		if totalAdmin == 0 {
 			if err := seedingUserAdmin(tx); err != nil {
 				log.Printf("Seeding user admin failed: %v", err)
@@ -89,7 +89,7 @@ func Seeding(db *gorm.DB) {
 
 	{ // Seeding user guest
 		var totalUser int64
-		tx.Model(&user.User{}).Where("name = ? AND email = ?", "User", "user@jxboard.id").Count(&totalUser)
+		tx.Model(&user.User{}).Where("name = ? AND email = ?", "User", "user@email.id").Count(&totalUser)
 		if totalUser == 0 {
 			if err := seedingUserGuest(tx); err != nil {
 				log.Printf("Seeding user guest failed: %v", err)
@@ -461,7 +461,7 @@ func seedingUserAdmin(tx *gorm.DB) error {
 		Name:        "Admin",
 		RoleID:      adminRole.ID,
 		Username:    "admin",
-		Email:       "admin@jxboard.id",
+		Email:       "admin@email.id",
 		Password:    string(hasedPassword),
 		ValidatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
@@ -496,7 +496,7 @@ func seedingUserGuest(tx *gorm.DB) error {
 		Name:        "User",
 		RoleID:      userRole.ID,
 		Username:    "user",
-		Email:       "user@jxboard.id",
+		Email:       "user@email.id",
 		Password:    string(hasedPassword),
 		ValidatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
