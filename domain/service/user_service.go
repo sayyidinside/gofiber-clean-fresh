@@ -116,7 +116,7 @@ func (s *userService) Create(ctx context.Context, input *model.UserInput) helper
 	logData := helpers.CreateLog(s)
 	defer helpers.LogSystemWithDefer(ctx, &logData)
 
-	userEntity := model.UserInputToEntity(input)
+	userEntity := input.ToEntity()
 
 	if userEntity == nil {
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
@@ -165,7 +165,7 @@ func (s *userService) UpdateByID(ctx context.Context, input *model.UserUpdateInp
 		})
 	}
 
-	userEntity := model.UserUpdateInputToEntity(input)
+	userEntity := input.ToEntity()
 	if userEntity == nil {
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
@@ -214,7 +214,7 @@ func (s *userService) ChangePassByID(ctx context.Context, input *model.ChangePas
 		})
 	}
 
-	userEntity := model.ChangePasswordToEntity(input)
+	userEntity := input.ToEntity()
 	if userEntity == nil {
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,

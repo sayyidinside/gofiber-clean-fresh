@@ -96,7 +96,7 @@ func UserToListModel(users *[]entity.User) *[]UserList {
 	return &listUsers
 }
 
-func UserInputToEntity(userInput *UserInput) *entity.User {
+func (userInput *UserInput) ToEntity() *entity.User {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(userInput.Password), bcrypt.DefaultCost)
 
 	return &entity.User{
@@ -109,7 +109,7 @@ func UserInputToEntity(userInput *UserInput) *entity.User {
 	}
 }
 
-func UserUpdateInputToEntity(input *UserUpdateInput) *entity.User {
+func (input *UserUpdateInput) ToEntity() *entity.User {
 
 	return &entity.User{
 		Name:     input.Name,
@@ -119,14 +119,14 @@ func UserUpdateInputToEntity(input *UserUpdateInput) *entity.User {
 	}
 }
 
-func ChangePasswordToEntity(input *ChangePasswordInput) *entity.User {
+func (input *ChangePasswordInput) ToEntity() *entity.User {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	return &entity.User{
 		Password: string(hashedPassword),
 	}
 }
 
-func SanitizeUserInput(input *UserInput) {
+func (input *UserInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
 	input.Name = sanitizer.Sanitize(input.Name)
@@ -136,7 +136,7 @@ func SanitizeUserInput(input *UserInput) {
 	input.RePassword = sanitizer.Sanitize(input.RePassword)
 }
 
-func SanitizeUserUpdateInput(input *UserUpdateInput) {
+func (input *UserUpdateInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
 	input.Name = sanitizer.Sanitize(input.Name)
@@ -144,7 +144,7 @@ func SanitizeUserUpdateInput(input *UserUpdateInput) {
 	input.Email = sanitizer.Sanitize(input.Email)
 }
 
-func SanitizeChangePasswordInput(input *ChangePasswordInput) {
+func (input *ChangePasswordInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
 	input.Password = sanitizer.Sanitize(input.Password)
