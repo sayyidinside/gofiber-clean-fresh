@@ -45,7 +45,7 @@ func (h *authHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizeLoginInput(&input)
+	input.Sanitize()
 
 	response := h.service.Login(c.Context(), &input)
 	response.Log = &logDataData
@@ -66,7 +66,7 @@ func (h *authHandler) Logout(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizeTokenInput(&input)
+	input.Sanitize()
 
 	if err := helpers.ValidateInput(input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -97,7 +97,7 @@ func (h *authHandler) Refresh(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizeTokenInput(&input)
+	input.Sanitize()
 
 	if err := helpers.ValidateInput(input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -128,7 +128,7 @@ func (h *authHandler) Verify(c *fiber.Ctx) error {
 		})
 	}
 
-	model.SanitizeTokenInput(&input)
+	input.Sanitize()
 
 	if err := helpers.ValidateInput(input); err != nil {
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{

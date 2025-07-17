@@ -13,14 +13,14 @@ type (
 	}
 )
 
-func SanitizeLoginInput(input *LoginInput) {
+func (input *LoginInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
 	input.UsernameOrEmail = sanitizer.Sanitize(input.UsernameOrEmail)
 	input.Password = sanitizer.Sanitize(input.Password)
 }
 
-func SanitizeTokenInput(input *TokenInput) {
+func (input *TokenInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
 	input.Token = sanitizer.Sanitize(input.Token)
