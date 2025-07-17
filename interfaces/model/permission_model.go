@@ -71,7 +71,7 @@ func SanitizePermissionInput(input *PermissionInput) {
 	input.Name = sanitizer.Sanitize(input.Name)
 }
 
-func PermissionInputToEntity(input *PermissionInput) *entity.Permission {
+func (input *PermissionInput) ToEntity() *entity.Permission {
 
 	return &entity.Permission{
 		Name:     input.Name,

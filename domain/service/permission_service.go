@@ -90,7 +90,7 @@ func (s *permissionService) Create(ctx context.Context, input *model.PermissionI
 	logData := helpers.CreateLog(s)
 	defer helpers.LogSystemWithDefer(ctx, &logData)
 
-	permissionEntity := model.PermissionInputToEntity(input)
+	permissionEntity := input.ToEntity()
 	if permissionEntity == nil {
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
@@ -138,7 +138,7 @@ func (s *permissionService) UpdateByID(ctx context.Context, input *model.Permiss
 		})
 	}
 
-	permissionEntity := model.PermissionInputToEntity(input)
+	permissionEntity := input.ToEntity()
 	if permissionEntity == nil {
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,
