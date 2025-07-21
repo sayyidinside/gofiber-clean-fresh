@@ -99,6 +99,7 @@ func Authentication() fiber.Handler {
 		}
 
 		permissionInterfaces, ok := claim["permissions"].([]interface{})
+		log.Println(ok)
 		if !ok {
 			return helpers.ResponseFormatter(c, helpers.BaseResponse{
 				Status:  fiber.StatusUnauthorized,

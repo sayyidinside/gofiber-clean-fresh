@@ -214,7 +214,7 @@ func (r *userRepository) NameExist(ctx context.Context, user *entity.User) bool 
 
 	var totalData int64
 
-	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("name = ? ", user.Name)
+	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("username = ? ", user.Username)
 	if user.ID != 0 {
 		tx = tx.Not("id = ?", user.ID)
 	}

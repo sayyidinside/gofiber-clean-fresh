@@ -16,7 +16,6 @@ type (
 		UUID        uuid.UUID    `json:"uuid"`
 		RoleID      uint         `json:"role_id"`
 		Role        string       `json:"role"`
-		Name        string       `json:"name"`
 		Username    string       `json:"username"`
 		Email       string       `json:"email"`
 		ValidatedAt sql.NullTime `json:"validated_at"`
@@ -32,14 +31,12 @@ type (
 	UserList struct {
 		ID       uint      `json:"id"`
 		UUID     uuid.UUID `json:"uuid"`
-		Name     string    `json:"name"`
 		Username string    `json:"username"`
 		Email    string    `json:"email"`
 		Role     string    `json:"role"`
 	}
 
 	UserInput struct {
-		Name       string `json:"name" form:"name" validate:"required"`
 		Username   string `json:"username" form:"username" validate:"required"`
 		Email      string `json:"email" form:"email" validate:"required"`
 		Password   string `json:"password" form:"password" validate:"required"`
@@ -48,7 +45,6 @@ type (
 	}
 
 	UserUpdateInput struct {
-		Name     string `json:"name" form:"name" validate:"required"`
 		Username string `json:"username" form:"username" validate:"required"`
 		Email    string `json:"email" form:"email" validate:"required"`
 		RoleID   uint   `json:"role_id" form:"role_id" validate:"required"`
@@ -66,7 +62,6 @@ func UserToDetailModel(user *entity.User) *UserDetail {
 		UUID:        user.UUID,
 		RoleID:      user.RoleID,
 		Role:        user.Role.Name,
-		Name:        user.Name,
 		Username:    user.Username,
 		Email:       user.Email,
 		ValidatedAt: user.ValidatedAt,
@@ -79,7 +74,6 @@ func UserToModel(user *entity.User) *UserList {
 	return &UserList{
 		ID:       user.ID,
 		UUID:     user.UUID,
-		Name:     user.Name,
 		Username: user.Username,
 		Email:    user.Email,
 		Role:     user.Role.Name,
@@ -100,7 +94,6 @@ func (userInput *UserInput) ToEntity() *entity.User {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(userInput.Password), bcrypt.DefaultCost)
 
 	return &entity.User{
-		Name:        userInput.Name,
 		Username:    userInput.Username,
 		Email:       userInput.Email,
 		Password:    string(hashedPassword),
@@ -112,7 +105,6 @@ func (userInput *UserInput) ToEntity() *entity.User {
 func (input *UserUpdateInput) ToEntity() *entity.User {
 
 	return &entity.User{
-		Name:     input.Name,
 		Username: input.Username,
 		Email:    input.Email,
 		RoleID:   input.RoleID,
@@ -129,7 +121,6 @@ func (input *ChangePasswordInput) ToEntity() *entity.User {
 func (input *UserInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
-	input.Name = sanitizer.Sanitize(input.Name)
 	input.Username = sanitizer.Sanitize(input.Username)
 	input.Email = sanitizer.Sanitize(input.Email)
 	input.Password = sanitizer.Sanitize(input.Password)
@@ -139,7 +130,6 @@ func (input *UserInput) Sanitize() {
 func (input *UserUpdateInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
-	input.Name = sanitizer.Sanitize(input.Name)
 	input.Username = sanitizer.Sanitize(input.Username)
 	input.Email = sanitizer.Sanitize(input.Email)
 }
