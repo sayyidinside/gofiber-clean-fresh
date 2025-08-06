@@ -3,6 +3,8 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -50,7 +52,23 @@ func (c *CacheClient) Exist(ctx context.Context, key string) (exist bool, err er
 }
 
 func (c *CacheClient) Set(ctx context.Context, key string, value any, expiration time.Duration) error {
-	return c.client.Set(ctx, key, value, expiration).Err()
+	var data interface{}
+
+	// Only serialize non-primitive types
+	switch reflect.TypeOf(value).Kind() {
+	case reflect.String, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64, reflect.Bool:
+		data = value
+	default:
+		jsonData, err := json.Marshal(value)
+		if err != nil {
+			return fmt.Errorf("failed to marshal value: %w", err)
+		}
+		data = string(jsonData)
+	}
+
+	return c.client.Set(ctx, key, data, expiration).Err()
 }
 
 func (c *CacheClient) Del(ctx context.Context, key string) error {

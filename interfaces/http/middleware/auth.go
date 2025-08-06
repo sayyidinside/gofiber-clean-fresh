@@ -51,7 +51,7 @@ func Authentication() fiber.Handler {
 			})
 		}
 
-		name, ok := claim["name"].(string)
+		username, ok := claim["username"].(string)
 		if !ok {
 			return helpers.ResponseFormatter(c, helpers.BaseResponse{
 				Status:  fiber.StatusUnauthorized,
@@ -99,7 +99,6 @@ func Authentication() fiber.Handler {
 		}
 
 		permissionInterfaces, ok := claim["permissions"].([]interface{})
-		log.Println(ok)
 		if !ok {
 			return helpers.ResponseFormatter(c, helpers.BaseResponse{
 				Status:  fiber.StatusUnauthorized,
@@ -116,7 +115,7 @@ func Authentication() fiber.Handler {
 		}
 
 		c.Locals("user_id", user_id)
-		c.Locals("name", name)
+		c.Locals("username", username)
 		c.Locals("email", email)
 		c.Locals("is_admin", is_admin)
 		c.Locals("validated", validated)

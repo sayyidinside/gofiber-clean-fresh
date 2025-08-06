@@ -2,11 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/entity"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/repository"
+	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/redis"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/model"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
@@ -24,12 +28,17 @@ type UserService interface {
 type userService struct {
 	repository     repository.UserRepository
 	roleRepository repository.RoleRepository
+	cacheRedis     *redis.CacheClient
 }
 
-func NewUserService(repository repository.UserRepository, roleRepository repository.RoleRepository) UserService {
+func NewUserService(
+	repository repository.UserRepository, roleRepository repository.RoleRepository,
+	cacheRedis *redis.CacheClient,
+) UserService {
 	return &userService{
 		repository:     repository,
 		roleRepository: roleRepository,
+		cacheRedis:     cacheRedis,
 	}
 }
 
@@ -37,17 +46,28 @@ func (s *userService) GetByID(ctx context.Context, id uint) helpers.BaseResponse
 	logData := helpers.CreateLog(s)
 	defer helpers.LogSystemWithDefer(ctx, &logData)
 
-	user, err := s.repository.FindByID(ctx, id)
-	if user == nil || err != nil {
-		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
-			Status:  fiber.StatusNotFound,
-			Success: false,
-			Message: "User Not Found",
-			Errors:  err,
-		})
+	user := &entity.User{}
+	userCacheKey := fmt.Sprintf("cache:user-detail:user-id:%d", id)
+
+	if err := s.cacheRedis.GetObject(ctx, userCacheKey, user); err != nil || user.GetID() == 0 {
+		foundUser, err := s.repository.FindByID(ctx, id)
+		if foundUser == nil || err != nil {
+			return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
+				Status:  fiber.StatusNotFound,
+				Success: false,
+				Message: "User Not Found",
+				Errors:  err,
+			})
+		}
+
+		user = foundUser
+
+		err = s.cacheRedis.Set(ctx, userCacheKey, user, 5*time.Minute)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
-	// convert entity to model data
 	userModel := model.UserToDetailModel(user)
 
 	return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
@@ -62,14 +82,26 @@ func (s *userService) GetByUUID(ctx context.Context, uuid uuid.UUID) helpers.Bas
 	logData := helpers.CreateLog(s)
 	defer helpers.LogSystemWithDefer(ctx, &logData)
 
-	user, err := s.repository.FindByUUID(ctx, uuid)
-	if user == nil || err != nil {
-		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
-			Status:  fiber.StatusNotFound,
-			Success: false,
-			Message: "User Not Found",
-			Errors:  err,
-		})
+	user := &entity.User{}
+	userCacheKey := fmt.Sprintf("cache:user-detail:user-uuid:%d", uuid)
+
+	if err := s.cacheRedis.GetObject(ctx, userCacheKey, user); err != nil || user.GetID() == 0 {
+		foundUser, err := s.repository.FindByUUID(ctx, uuid)
+		if foundUser == nil || err != nil {
+			return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
+				Status:  fiber.StatusNotFound,
+				Success: false,
+				Message: "User Not Found",
+				Errors:  err,
+			})
+		}
+
+		user = foundUser
+
+		err = s.cacheRedis.Set(ctx, userCacheKey, user, 5*time.Minute)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	userModel := model.UserToDetailModel(user)
