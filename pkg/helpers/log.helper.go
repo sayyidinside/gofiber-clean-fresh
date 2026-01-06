@@ -17,6 +17,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/natefinch/lumberjack"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/utils/constant"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -221,7 +222,7 @@ func APILogger(logger *zap.Logger) fiber.Handler {
 
 		// Get username from session or set as empty string if nil
 		var username string
-		if sessionUsername := c.Locals("username"); sessionUsername != nil {
+		if sessionUsername := c.Locals("name"); sessionUsername != nil {
 			username = sessionUsername.(string)
 		} else {
 			username = ""
@@ -445,12 +446,12 @@ func CreateLogSystem23(ctx context.Context, logData *Log) {
 		logSysData.Username = username
 	}
 
-	duration := FormatDuration(logSysData.StartTime, logSysData.EndTime)
+	// duration := FormatDuration(logSysData.StartTime, logSysData.EndTime)
 
 	// Log debug waktu start dan end
-	log.Printf("Log for %s - StartTime: %s, EndTime: %s, Duration: %s\n",
-		logSysData.Location, logData.StartTime.Format(time.RFC3339), logSysData.EndTime.Format(time.RFC3339), duration)
-	log.Println("=============================================================")
+	// log.Printf("Log for %s - StartTime: %s, EndTime: %s, Duration: %s\n",
+	// 	logSysData.Location, logData.StartTime.Format(time.RFC3339), logSysData.EndTime.Format(time.RFC3339), duration)
+	// log.Println("=============================================================")
 
 	// LogSysChannel could be where your logs are processed
 	LogSysChannel <- logSysData
@@ -462,12 +463,22 @@ func ExtractIdentifierAndUsername(c *fiber.Ctx) context.Context {
 
 	identifier := c.GetRespHeader(fiber.HeaderXRequestID)
 	username := ""
-	if sessionUsername := c.Locals("username"); sessionUsername != nil {
+	if sessionUsername := c.Locals("name"); sessionUsername != nil {
 		username = sessionUsername.(string)
 	}
+	var user_id float64
+	if sessionUserID := c.Locals("user_id"); sessionUserID != nil {
+		user_id = sessionUserID.(float64)
+	}
+	var is_admin bool
+	if sessionUserAdmin := c.Locals("is_admin"); sessionUserAdmin != nil {
+		is_admin = sessionUserAdmin.(bool)
+	}
 
-	ctx = context.WithValue(ctx, "identifier", identifier)
-	ctx = context.WithValue(ctx, "username", username)
+	ctx = context.WithValue(ctx, constant.CtxKeyIdentifier, identifier)
+	ctx = context.WithValue(ctx, constant.CtxKeyUsername, username)
+	ctx = context.WithValue(ctx, constant.CtxKeyUserID, user_id)
+	ctx = context.WithValue(ctx, constant.CtxKeyIsAdmin, is_admin)
 
 	return ctx
 }
@@ -478,13 +489,13 @@ func InitialLogExtractIdentifierAndUsername(c *fiber.Ctx, i interface{}) (contex
 	// extract
 	identifier := c.GetRespHeader(fiber.HeaderXRequestID)
 	username := ""
-	if sessionUsername := c.Locals("username"); sessionUsername != nil {
+	if sessionUsername := c.Locals("name"); sessionUsername != nil {
 		username = sessionUsername.(string)
 	}
 
 	// passing to context
-	ctx = context.WithValue(ctx, "identifier", identifier)
-	ctx = context.WithValue(ctx, "username", username)
+	ctx = context.WithValue(ctx, constant.CtxKeyIdentifier, identifier)
+	ctx = context.WithValue(ctx, constant.CtxKeyUsername, username)
 
 	log := CreateLog(i)
 
