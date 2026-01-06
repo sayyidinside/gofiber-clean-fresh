@@ -6,6 +6,8 @@ GoFiber Clean Fresh is a base template for Go projects, structured using Clean A
 
 - **GoFiber**: Web framework for building fast and scalable APIs.
 - **GORM**: Object-Relational Mapper (ORM) for MySQL database operations, utilizing GORM datatypes.
+- **Redis**: In-memory key–value database, used as a distributed cache and message broker, with optional durability.
+- **RabbitMQ**: RabbitMQ is an open-source message broker that helps systems communicate by sending, receiving, and managing messages.
 - **Air**: Live reload for Go applications during development.
 - **Zap**: Fast, structured logging.
 - **Validator V10**: Validation of incoming data for requests.
