@@ -65,7 +65,7 @@ func PermissionToListModels(permissions *[]entity.Permission) *[]PermissionList 
 	return &listModels
 }
 
-func SanitizePermissionInput(input *PermissionInput) {
+func (input *PermissionInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
 	input.Name = sanitizer.Sanitize(input.Name)

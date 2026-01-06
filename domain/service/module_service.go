@@ -86,7 +86,7 @@ func (s *moduleService) Create(ctx context.Context, input *model.ModuleInput) he
 	logData := helpers.CreateLog(s)
 	defer helpers.LogSystemWithDefer(ctx, &logData)
 
-	moduleEntity := model.ModuleInputToEntity(input)
+	moduleEntity := input.ToEntity()
 
 	if err := s.validateEntityInput(ctx, moduleEntity); err != nil {
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
@@ -126,7 +126,7 @@ func (s *moduleService) UpdateByID(ctx context.Context, input *model.ModuleInput
 		})
 	}
 
-	moduleEntity := model.ModuleInputToEntity(input)
+	moduleEntity := input.ToEntity()
 	if moduleEntity == nil {
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
 			Status:  fiber.StatusInternalServerError,

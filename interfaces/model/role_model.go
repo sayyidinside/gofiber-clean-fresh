@@ -57,14 +57,14 @@ func RoleToListModels(role *[]entity.Role) *[]RoleList {
 	return &listModels
 }
 
-func RoleInputToEntity(input *RoleInput) *entity.Role {
+func (input *RoleInput) ToEntity() *entity.Role {
 	return &entity.Role{
 		Name:    input.Name,
 		IsAdmin: input.IsAdmin,
 	}
 }
 
-func SanitizeRoleInput(input *RoleInput) {
+func (input *RoleInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
 	input.Name = sanitizer.Sanitize(input.Name)

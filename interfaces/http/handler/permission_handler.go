@@ -95,7 +95,7 @@ func (h *permissionHandler) CreatePermission(c *fiber.Ctx) error {
 			Errors:  err,
 		})
 	} else {
-		model.SanitizePermissionInput(&input)
+		input.Sanitize()
 
 		if err := helpers.ValidateInput(input); err != nil {
 			return helpers.ResponseFormatter(c, helpers.BaseResponse{
@@ -142,7 +142,7 @@ func (h *permissionHandler) UpdatePermission(c *fiber.Ctx) error {
 				Errors:  err,
 			})
 		} else {
-			model.SanitizePermissionInput(&input)
+			input.Sanitize()
 
 			if err := helpers.ValidateInput(input); err != nil {
 				return helpers.ResponseFormatter(c, helpers.BaseResponse{

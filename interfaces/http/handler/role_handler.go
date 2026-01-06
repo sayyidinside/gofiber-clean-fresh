@@ -95,7 +95,7 @@ func (h *roleHandler) CreateRole(c *fiber.Ctx) error {
 			Errors:  err,
 		}
 	} else {
-		model.SanitizeRoleInput(&input)
+		input.Sanitize()
 
 		if err := helpers.ValidateInput(input); err != nil {
 			response = helpers.BaseResponse{
@@ -143,7 +143,7 @@ func (h *roleHandler) UpdateRole(c *fiber.Ctx) error {
 				Errors:  err,
 			}
 		} else {
-			model.SanitizeRoleInput(&input)
+			input.Sanitize()
 
 			if err := helpers.ValidateInput(input); err != nil {
 				response = helpers.BaseResponse{

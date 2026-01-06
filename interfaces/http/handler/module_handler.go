@@ -96,7 +96,7 @@ func (h *moduleHandler) CreateModule(c *fiber.Ctx) error {
 			Errors:  err,
 		})
 	} else {
-		model.SanitizeModuleInput(&input)
+		input.Sanitize()
 
 		if err := helpers.ValidateInput(input); err != nil {
 			response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{
@@ -144,7 +144,7 @@ func (h *moduleHandler) UpdateModule(c *fiber.Ctx) error {
 			})
 		}
 
-		model.SanitizeModuleInput(&input)
+		input.Sanitize()
 
 		if err := helpers.ValidateInput(input); err != nil {
 			response = helpers.LogBaseResponse(&logData, helpers.BaseResponse{

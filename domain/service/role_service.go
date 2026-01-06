@@ -89,7 +89,7 @@ func (s *roleService) Create(ctx context.Context, input *model.RoleInput) helper
 	logData := helpers.CreateLog(s)
 	defer helpers.LogSystemWithDefer(ctx, &logData)
 
-	roleEntity := model.RoleInputToEntity(input)
+	roleEntity := input.ToEntity()
 
 	if err := s.validateEntityInput(ctx, roleEntity); err != nil {
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{
@@ -147,7 +147,7 @@ func (s *roleService) UpdateByID(ctx context.Context, input *model.RoleInput, id
 		})
 	}
 
-	roleEntity := model.RoleInputToEntity(input)
+	roleEntity := input.ToEntity()
 	if roleEntity == nil {
 		tx.Rollback() // Rollback on error
 		return helpers.LogBaseResponse(&logData, helpers.BaseResponse{

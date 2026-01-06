@@ -58,13 +58,13 @@ func ModuleToListModels(modules *[]entity.Module) *[]ModuleList {
 	return &listModels
 }
 
-func SanitizeModuleInput(input *ModuleInput) {
+func (input *ModuleInput) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 
 	input.Name = sanitizer.Sanitize(input.Name)
 }
 
-func ModuleInputToEntity(input *ModuleInput) *entity.Module {
+func (input *ModuleInput) ToEntity() *entity.Module {
 	return &entity.Module{
 		Name: input.Name,
 	}
