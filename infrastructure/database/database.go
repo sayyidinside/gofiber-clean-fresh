@@ -45,8 +45,10 @@ func Connect() (*gorm.DB, error) {
 	}
 
 	// Migrate and seed the database
-	Migrate(db)
-	Seeding(db)
+	if cfg.AutoMigrate {
+		Migrate(db)
+		Seeding(db)
+	}
 
 	return db, nil
 }

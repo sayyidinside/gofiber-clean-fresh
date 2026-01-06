@@ -9,11 +9,12 @@ import (
 
 type Config struct {
 	// General Config
-	AppName   string `mapstructure:"APP_NAME"`
-	Env       string `mapstructure:"ENV"`
-	Port      string `mapstructure:"PORT"`
-	AdminPass string `mapstructure:"ADMIN_PASS"`
-	Debug     bool   `mapstructure:"DEBUG"`
+	AppName     string `mapstructure:"APP_NAME"`
+	Env         string `mapstructure:"ENV"`
+	Port        string `mapstructure:"PORT"`
+	AdminPass   string `mapstructure:"ADMIN_PASS"`
+	Debug       bool   `mapstructure:"DEBUG"`
+	AutoMigrate bool   `mapstructure:"AUTO_MIGRATE"`
 
 	// JWT
 	JwtRefreshPrivateSecret string `mapstructure:"JWT_REFRESH_PRIVATE_SECRET"`
