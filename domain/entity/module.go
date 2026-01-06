@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/utils/constant"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +22,7 @@ type Module struct {
 }
 
 func (Module) TableName() string {
-	return "modules"
+	return constant.TABLE_MODULE
 }
 
 // BeforeCreate is a GORM hook that is triggered before a new record is inserted into the database.

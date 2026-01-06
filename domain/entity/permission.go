@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/utils/constant"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +24,7 @@ type Permission struct {
 }
 
 func (Permission) TableName() string {
-	return "permissions"
+	return constant.TABLE_PERMISSION
 }
 
 // BeforeCreate is a GORM hook that is triggered before a new record is inserted into the database.

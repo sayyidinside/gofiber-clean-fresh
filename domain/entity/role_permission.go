@@ -1,5 +1,7 @@
 package entity
 
+import "github.com/sayyidinside/gofiber-clean-fresh/pkg/utils/constant"
+
 type RolePermission struct {
 	RoleID       uint `gorm:"primaryKey"`
 	PermissionID uint `gorm:"primaryKey"`
@@ -10,5 +12,5 @@ type RolePermission struct {
 }
 
 func (RolePermission) TableName() string {
-	return "role_permissions"
+	return constant.TABLE_ROLE_PERMISSION
 }

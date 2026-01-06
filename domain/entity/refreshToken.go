@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/utils/constant"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +19,7 @@ type RefreshToken struct {
 }
 
 func (RefreshToken) TableName() string {
-	return "refresh_tokens"
+	return constant.TABLE_REFRESH_TOKEN
 }
 
 // BeforeCreate is a GORM hook that is triggered before a new record is inserted into the database.

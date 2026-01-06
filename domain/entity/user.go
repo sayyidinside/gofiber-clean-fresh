@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/sayyidinside/gofiber-clean-fresh/pkg/utils/constant"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -21,7 +22,7 @@ type User struct {
 }
 
 func (User) TableName() string {
-	return "users"
+	return constant.TABLE_USER
 }
 
 // BeforeCreate is a GORM hook that is triggered before a new record is inserted into the database.
