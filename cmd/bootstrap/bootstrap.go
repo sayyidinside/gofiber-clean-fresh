@@ -1,13 +1,13 @@
 package bootstrap
 
 import (
-	"log"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/sayyidinside/gofiber-clean-fresh/cmd/worker"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/repository"
 	"github.com/sayyidinside/gofiber-clean-fresh/domain/service"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
+	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
+	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/rabbitmq"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/redis"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/handler"
 	"github.com/sayyidinside/gofiber-clean-fresh/interfaces/http/middleware"
@@ -52,9 +52,34 @@ func Initialize(app *fiber.App, db *gorm.DB, cacheRedis *redis.CacheClient, lock
 	routes.Setup(app, handler)
 }
 
-func InitApp() {
-	if err := config.LoadConfig(); err != nil {
-		log.Println(err.Error())
+type Deps struct {
+	Config   *config.Config
+	DB       *gorm.DB
+	Redis    *redis.RedisClient
+	RabbitMQ *rabbitmq.RabbitMQClient
+}
+
+func InitApp(is_rabbitmq bool) (*Deps, error) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	r := redis.Connect(cfg)
+
+	mq := &rabbitmq.RabbitMQClient{}
+	if is_rabbitmq {
+		mq, err = rabbitmq.Connect(config.AppConfig)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		mq = nil
 	}
 
 	worker.StartLogWorker()
@@ -63,4 +88,5 @@ func InitApp() {
 
 	middleware.InitWhitelistIP()
 
+	return &Deps{Config: cfg, DB: db, Redis: r, RabbitMQ: mq}, nil
 }

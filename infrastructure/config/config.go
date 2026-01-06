@@ -48,6 +48,9 @@ type Config struct {
 	RedisAddress  string `mapstructure:"REDIS_ADDRESS"`
 	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
 
+	// RabbitMQ
+	RabbitMQURL string `mapstructure:"RABBITMQ_URL"`
+
 	// Database
 	ProdDbUsername  string `mapstructure:"PROD_DB_USERNAME"`
 	ProdDbPassword  string `mapstructure:"PROD_DB_PASSWORD"`
@@ -68,7 +71,7 @@ type Config struct {
 
 var AppConfig *Config
 
-func LoadConfig() error {
+func LoadConfig() (*Config, error) {
 	viper.SetConfigFile("./.env")
 
 	// Enable Viper to read environment variables
@@ -86,7 +89,7 @@ func LoadConfig() error {
 
 	AppConfig = &Config{}
 	if err := viper.Unmarshal(AppConfig); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Watch for changes in the config file and reload AppConfig when changes occur
@@ -98,5 +101,5 @@ func LoadConfig() error {
 		}
 	})
 
-	return nil
+	return AppConfig, nil
 }

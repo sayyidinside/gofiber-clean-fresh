@@ -10,14 +10,15 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/sayyidinside/gofiber-clean-fresh/cmd/bootstrap"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/config"
-	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/database"
-	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/redis"
 	"github.com/sayyidinside/gofiber-clean-fresh/infrastructure/shutdown"
 	"github.com/sayyidinside/gofiber-clean-fresh/pkg/helpers"
 )
 
 func main() {
-	bootstrap.InitApp()
+	depedency, err := bootstrap.InitApp(false)
+	if err != nil {
+		log.Fatalf("error injecting depedency %v", err)
+	}
 
 	app := fiber.New(fiber.Config{
 		AppName:                 config.AppConfig.AppName,
@@ -38,18 +39,11 @@ func main() {
 
 	app.Use(helpers.ErrorHelper)
 
-	db, err := database.Connect()
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-
-	redisClient := redis.Connect(config.AppConfig)
-
-	bootstrap.Initialize(app, db, redisClient.CacheClient, redisClient.LockClient)
+	bootstrap.Initialize(app, depedency.DB, depedency.Redis.CacheClient, depedency.Redis.LockClient)
 
 	app.Use(helpers.NotFoundHelper)
 
-	shutdownHandler := shutdown.NewHandler(app, db, redisClient).WithTimeout(30 * time.Second)
+	shutdownHandler := shutdown.NewHandler(app, depedency.DB, depedency.Redis, depedency.RabbitMQ).WithTimeout(30 * time.Second)
 
 	go func() {
 		if err := app.Listen(fmt.Sprintf(":%s", config.AppConfig.Port)); err != nil {

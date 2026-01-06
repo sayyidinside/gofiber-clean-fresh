@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/natefinch/lumberjack v2.0.0+incompatible
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.11.0
 	github.com/spf13/viper v1.19.0
 	go.uber.org/zap v1.27.0
