@@ -95,7 +95,7 @@ func Authentication() fiber.Handler {
 			})
 		}
 
-		permissionInterfaces, ok := claim["permissions"].([]interface{})
+		permissionInterfaces, ok := claim["permissions"].([]any)
 		if !ok {
 			return helpers.ResponseFormatter(c, helpers.BaseResponse{
 				Status:  fiber.StatusUnauthorized,
@@ -177,6 +177,10 @@ func Authorization(isAdminOnly bool, isValidOnly bool, allowedPermissions []stri
 					return c.Next()
 				}
 			}
+		}
+
+		if isValidOnly {
+			return c.Next()
 		}
 
 		return helpers.ResponseFormatter(c, helpers.BaseResponse{
