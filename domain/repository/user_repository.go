@@ -19,12 +19,11 @@ type UserRepository interface {
 	CountUnscoped(ctx context.Context, query *model.QueryGet) int64
 	Insert(ctx context.Context, user *entity.User) error
 	Update(ctx context.Context, user *entity.User) error
+	UpdateWithTransaction(ctx context.Context, tx *gorm.DB, user *entity.User) error
 	Delete(ctx context.Context, user *entity.User) error
-	NameExist(ctx context.Context, user *entity.User) bool
 	EmailExist(ctx context.Context, user *entity.User) bool
 	UsernameExist(ctx context.Context, user *entity.User) bool
 	FindByUsernameOrEmail(ctx context.Context, usernameOrEmail string) (*entity.User, error)
-	// Create(*User) error
 }
 
 type userRepository struct {
@@ -46,6 +45,7 @@ func (r *userRepository) FindByID(ctx context.Context, id uint) (*entity.User, e
 		Preload("Role", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name").Unscoped()
 		}).
+		Preload("Profile").
 		Find(&user)
 
 	if result.Error != nil || result.RowsAffected == 0 {
@@ -66,6 +66,7 @@ func (r *userRepository) FindByUUID(ctx context.Context, uuid uuid.UUID) (*entit
 		Preload("Role", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name").Unscoped()
 		}).
+		Preload("Profile").
 		Find(&user); result.Error != nil || result.RowsAffected == 0 {
 		logData.Message = "Not Passed"
 		logData.Err = result.Error
@@ -81,14 +82,18 @@ func (r *userRepository) FindAll(ctx context.Context, query *model.QueryGet) (*[
 
 	var users []entity.User
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).
+		Joins("JOIN roles on roles.id = users.role_id").
 		Preload("Role", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name").Unscoped()
 		})
 
 	var allowedFields = map[string]string{
-		"name":    "users.name",
-		"created": "users.created_at",
-		"updated": "users.updated_at",
+		"role":      "roles.name",
+		"username":  "users.username",
+		"email":     "users.email",
+		"validated": "users.validated_at",
+		"created":   "users.created_at",
+		"updated":   "users.updated_at",
 	}
 
 	tx = tx.Scopes(
@@ -114,18 +119,21 @@ func (r *userRepository) Count(ctx context.Context, query *model.QueryGet) int64
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).
+		Joins("JOIN roles on roles.id = users.role_id").
 		Preload("Role", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name")
 		})
 
 	var allowedFields = map[string]string{
-		"name":    "users.name",
-		"created": "users.created_at",
-		"updated": "users.updated_at",
+		"role":      "roles.name",
+		"username":  "users.username",
+		"email":     "users.email",
+		"validated": "users.validated_at",
+		"created":   "users.created_at",
+		"updated":   "users.updated_at",
 	}
 
 	tx = tx.Scopes(
-		helpers.Paginate(query),
 		helpers.Order(query, allowedFields),
 		helpers.Filter(query, allowedFields),
 		helpers.Search(query, allowedFields),
@@ -146,18 +154,21 @@ func (r *userRepository) CountUnscoped(ctx context.Context, query *model.QueryGe
 	var total int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.User{}).
+		Joins("JOIN roles on roles.id = users.role_id").
 		Preload("Role", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name").Unscoped()
 		})
 
 	var allowedFields = map[string]string{
-		"name":    "users.name",
-		"created": "users.created_at",
-		"updated": "users.updated_at",
+		"role":      "roles.name",
+		"username":  "users.username",
+		"email":     "users.email",
+		"validated": "users.validated_at",
+		"created":   "users.created_at",
+		"updated":   "users.updated_at",
 	}
 
 	tx = tx.Scopes(
-		helpers.Paginate(query),
 		helpers.Order(query, allowedFields),
 		helpers.Filter(query, allowedFields),
 		helpers.Search(query, allowedFields),
@@ -195,6 +206,18 @@ func (r *userRepository) Update(ctx context.Context, user *entity.User) error {
 	return nil
 }
 
+func (r *userRepository) UpdateWithTransaction(ctx context.Context, tx *gorm.DB, user *entity.User) error {
+	logData := helpers.CreateLog(r)
+	defer helpers.LogSystemWithDefer(ctx, &logData)
+
+	if err := tx.WithContext(ctx).Where("id = ?", user.ID).Updates(user).Error; err != nil {
+		logData.Message = "Not Passed"
+		logData.Err = err
+		return err
+	}
+	return nil
+}
+
 func (r *userRepository) Delete(ctx context.Context, user *entity.User) error {
 	logData := helpers.CreateLog(r)
 	defer helpers.LogSystemWithDefer(ctx, &logData)
@@ -206,25 +229,6 @@ func (r *userRepository) Delete(ctx context.Context, user *entity.User) error {
 	}
 
 	return nil
-}
-
-func (r *userRepository) NameExist(ctx context.Context, user *entity.User) bool {
-	logData := helpers.CreateLog(r)
-	defer helpers.LogSystemWithDefer(ctx, &logData)
-
-	var totalData int64
-
-	tx := r.DB.WithContext(ctx).Model(&entity.User{}).Where("username = ? ", user.Username)
-	if user.ID != 0 {
-		tx = tx.Not("id = ?", user.ID)
-	}
-
-	if err := tx.Count(&totalData).Error; err != nil {
-		logData.Err = err
-		logData.Message = "Not Passed"
-	}
-
-	return totalData != 0
 }
 
 func (r *userRepository) EmailExist(ctx context.Context, user *entity.User) bool {
