@@ -15,7 +15,7 @@ type (
 	}
 )
 
-func SanitizeQueryGet(query *QueryGet) {
+func (query *QueryGet) Sanitize() {
 	sanitizer := bluemonday.StrictPolicy()
 	query.Page = sanitizer.Sanitize(query.Page)
 	query.Limit = sanitizer.Sanitize(query.Limit)

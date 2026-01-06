@@ -68,7 +68,7 @@ func (h *permissionHandler) GetAllPermission(c *fiber.Ctx) error {
 			Errors:  err,
 		})
 	} else {
-		model.SanitizeQueryGet(query)
+		query.Sanitize()
 
 		url := c.BaseURL() + c.OriginalURL()
 		response = h.service.GetAll(ctx, query, url)
