@@ -15,6 +15,7 @@ import (
 
 func Seeding(db *gorm.DB) {
 	tx := db.Begin()
+	defer tx.Rollback()
 
 	{ // Seeding Module
 		var totalModule int64
@@ -22,7 +23,6 @@ func Seeding(db *gorm.DB) {
 		if totalModule != 4 {
 			if err := seedingModuleUserManagement(tx); err != nil {
 				log.Printf("Seeding module user management failed: %v", err)
-				tx.Rollback()
 				return
 			}
 
@@ -36,7 +36,6 @@ func Seeding(db *gorm.DB) {
 		if totalPermission == 0 {
 			if err := seedingPermissionUserManagement(tx); err != nil {
 				log.Printf("Seeding permission user management failed: %v", err)
-				tx.Rollback()
 				return
 			}
 
@@ -50,7 +49,6 @@ func Seeding(db *gorm.DB) {
 		if totalRoleAdmin == 0 {
 			if err := seedingRoleAdmin(tx); err != nil {
 				log.Printf("Seeding role admin failed: %v", err)
-				tx.Rollback()
 				return
 			}
 
@@ -64,7 +62,6 @@ func Seeding(db *gorm.DB) {
 		if totalRoleUser == 0 {
 			if err := seedingRoleGuest(tx); err != nil {
 				log.Printf("Seeding role user failed: %v", err)
-				tx.Rollback()
 				return
 			}
 
@@ -78,7 +75,6 @@ func Seeding(db *gorm.DB) {
 		if totalAdmin == 0 {
 			if err := seedingUserAdmin(tx); err != nil {
 				log.Printf("Seeding user admin failed: %v", err)
-				tx.Rollback()
 				return
 			}
 
@@ -92,7 +88,6 @@ func Seeding(db *gorm.DB) {
 		if totalUser == 0 {
 			if err := seedingUserGuest(tx); err != nil {
 				log.Printf("Seeding user guest failed: %v", err)
-				tx.Rollback()
 				return
 			}
 
